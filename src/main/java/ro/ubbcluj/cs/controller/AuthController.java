@@ -21,6 +21,8 @@ public class AuthController
     @Autowired
     private DocumentRepository noteRepository;
     
+    private SessionManager sm = SessionManager.getInstance();
+    
 //    @RequestMapping(method = RequestMethod.POST)
 //    ResponseEntity<?> add(@PathVariable String userId, @RequestBody Bookmark input)
 //    {
