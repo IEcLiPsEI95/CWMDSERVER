@@ -22,10 +22,12 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="true" />
+        <module name="cwmd-server" />
         <module name="CWMDSERVER" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="cwmd-server" target="1.8" />
       <module name="CWMDSERVER" target="1.8" />
     </bytecodeTargetLevel>
   </component>
