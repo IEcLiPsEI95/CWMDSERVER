@@ -1,38 +1,42 @@
 package ro.ubbcluj.cs.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
-import ro.ubbcluj.cs.repository.DocumentRepository;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import org.apache.commons.logging.LogFactory;
-
-import java.util.Collection;
+import org.springframework.beans.factory.annotation.Autowired;
+import ro.ubbcluj.cs.domain.User;
+import ro.ubbcluj.cs.domain.UserPerm;
+import ro.ubbcluj.cs.repository.DocumentRepository;
+import sun.awt.Mutex;
 
 /**
- * Created by hzugr on 11/15/2016.
+ * Created by hlupean on 17-Nov-16.
  */
-@RestController
-public class DocumentController {
-
-    public static final String API_DOCS = "/api/docs";
-    private static Logger LOG = LogManager.getLogger("file");
-
+public class DocumentController
+{
+    private static DocumentController instance = null;
+    
     @Autowired
-    private DocumentRepository noteRepository;
+    private DocumentRepository repo;
+    private static Logger LOG = LogManager.getLogger("file");
     
-    
-    @RequestMapping(value = API_DOCS, method = RequestMethod.GET)
-    public String getAll() {
-        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        LOG.info("getAll... by " + user.getUsername());
-        return "Success!";
+    public static DocumentController getInstance()
+    {
+        if (instance == null)
+        {
+            synchronized (DocumentController.class)
+            {
+                if (instance == null)
+                {
+                    instance = new DocumentController();
+                }
+            }
+        }
+        return instance;
     }
+    
+    private DocumentController()
+    {
+        
+    }
+    
 }

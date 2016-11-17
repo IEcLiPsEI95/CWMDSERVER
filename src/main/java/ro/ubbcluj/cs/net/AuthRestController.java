@@ -1,19 +1,18 @@
-package ro.ubbcluj.cs.controller;
+package ro.ubbcluj.cs.net;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.*;
+import ro.ubbcluj.cs.domain.User;
 import ro.ubbcluj.cs.repository.DocumentRepository;
+import ro.ubbcluj.cs.session.SessionManager;
 
 /**
  * Created by hlupean on 16-Nov-16.
  */
 @RestController
-public class AuthController
+public class AuthRestController
 {
     public static final String API_DOCS = "/api/auth";
     private static Logger LOG = LogManager.getLogger("file");
@@ -36,12 +35,17 @@ public class AuthController
 //    Content-Type: text/html; charset=utf-8;
     
     
-    @CrossOrigin(origins = "http://170.30.117.3:8080")
     @RequestMapping(value = API_DOCS + "/login", method = RequestMethod.POST)
-    public String getById(@RequestBody String input)
+    public String Login(@RequestBody String input)
     {
-        System.out.println("aa");
-        System.out.println(input);
-        return input;
+        // username luat din pachet
+        String token = sm.Login("username", "pass");
+        if (null == token)
+        {
+            LOG.error("Failed to login user: " + "username");
+            return null; // eroare
+        }
+        
+        return "bau";
     }
 }
