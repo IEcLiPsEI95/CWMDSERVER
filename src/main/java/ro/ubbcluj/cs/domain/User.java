@@ -7,6 +7,7 @@ import java.util.Date;
  */
 public class User
 {
+    private int         id;
     private String      username;
     private String      password;
     private long        permissions;
@@ -22,7 +23,11 @@ public class User
         token               = null;
         loggedInTime        = 0;
     }
-    
+
+    public User() {
+
+    }
+
     public String getUsername()
     {
         return username;
@@ -71,5 +76,13 @@ public class User
     public void setPermissions(long permissions)
     {
         this.permissions = permissions;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 }
