@@ -14,22 +14,23 @@ import java.util.Map;
  */
 class CleanupThread extends Thread
 {
-    private final long maxMills =  60 * 60 * 1000;
-    private static Logger LOG = LogManager.getLogger("CleanupThread");
+    private long maxMills;
+    private static Logger log = LogManager.getLogger(CleanupThread.class);
     
     private Mutex listMutex;
     private HashMap<String, User> dictUsers;
     
-    CleanupThread(Mutex listMutex, HashMap<String, User> dictUsers)
+    CleanupThread(Mutex listMutex, HashMap<String, User> dictUsers, long maxMills)
     {
         this.listMutex = listMutex; // daca nu li se modifica valoarea si aici imi bag ^&*% in java
         this.dictUsers = dictUsers;
+        this.maxMills = maxMills;
     }
     
     @Override
     public void run()
     {
-        LOG.info("Cleanup thread started!");
+        log.info("Cleanup thread started!");
         
         long sleepTime;
         
@@ -37,21 +38,24 @@ class CleanupThread extends Thread
         {
             sleepTime = System.currentTimeMillis();
             
+            log.info("Good night");
             while (true)
             {
                 try
                 {
                     Thread.sleep(1000);
-                } catch (InterruptedException ignored)
+                } 
+                catch (InterruptedException ignored)
                 {
                 } // de ce????????/
+                
                 // poate mai trebuie verificat ceva aici
                 if (System.currentTimeMillis() - sleepTime >= maxMills)
                 {
                     break;
                 }
             }
-            LOG.info("Good morning");
+            log.info("Good morning");
     
             long currentTime = System.currentTimeMillis();
             
@@ -61,10 +65,13 @@ class CleanupThread extends Thread
             {
                 Map.Entry<String, User> entry = iter.next();
                 User user = entry.getValue();
-                
-                if (user.getLoggedInTime() - currentTime > maxMills)
+                               
+                if ((currentTime - user.getLoggedInTime()) >= (maxMills - 2))
                 {
-                    LOG.info("Will remove user: " + user.getUsername());
+                    log.info("Will remove user: " + user.getUsername());
+                    user.setLoggedInTime(0);
+                    user.setToken(null);
+                    
                     iter.remove();
                 }
             }

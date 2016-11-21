@@ -17,7 +17,7 @@ public class DocumentController
     
     @Autowired
     private DocumentRepository repo;
-    private static Logger LOG = LogManager.getLogger("file");
+    private static Logger log = LogManager.getLogger("file");
     
     public static DocumentController getInstance()
     {

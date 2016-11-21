@@ -3,49 +3,66 @@ package ro.ubbcluj.cs.net;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ro.ubbcluj.cs.domain.User;
-import ro.ubbcluj.cs.repository.DocumentRepository;
+import ro.ubbcluj.cs.controller.UserController;
+import ro.ubbcluj.cs.repository.UserRepository;
 import ro.ubbcluj.cs.session.SessionManager;
+
+import javax.jws.soap.SOAPBinding;
 
 /**
  * Created by hlupean on 16-Nov-16.
  */
+
+@RequestMapping("auth")
 @RestController
 public class AuthRestController
 {
-    public static final String API_DOCS = "/api/auth";
-    private static Logger LOG = LogManager.getLogger("file");
+    private static Logger log = LogManager.getLogger(AuthRestController.class);
     
     @Autowired
-    private DocumentRepository noteRepository;
+    private SessionManager sm;//= SessionManager.getInstance();
     
-    private SessionManager sm = SessionManager.getInstance();
+    @Autowired
+    private UserController ctrlUser; //= UserController.getInstance();
     
-//    @RequestMapping(method = RequestMethod.POST)
-//    ResponseEntity<?> add(@PathVariable String userId, @RequestBody Bookmark input)
-//    {
-//        this.validateUser(userId);
-//    }
+    @Autowired
+    private UserRepository repoUser;
     
-
-//    Access-Control-Allow-Origin: http://api.bob.com
-//    Access-Control-Allow-Credentials: true
-//    Access-Control-Expose-Headers: FooBar
-//    Content-Type: text/html; charset=utf-8;
-    
-    
-    @RequestMapping(value = API_DOCS + "/login", method = RequestMethod.POST)
-    public String Login(@RequestBody String input)
+    AuthRestController()
     {
-        // username luat din pachet
-        String token = sm.Login("username", "pass");
+        log.info("AuthRestController()");
+    }
+    
+    
+    
+    // asta ii doar de test... sa vedem ca merge conexiunea
+    @RequestMapping(value = "test/id={id}", method = RequestMethod.GET)
+    public @ResponseBody String Test(@PathVariable int id)
+    {
+        log.info("s-o conectat: " + id);
+        return Integer.toString(id * 2);
+    }
+    
+    @RequestMapping(value = "login", method = RequestMethod.POST)
+    public ResponseEntity<?> Login(
+            @RequestParam(value="username", required=true) String username,
+            @RequestParam(value="password", required=true) String password
+    )
+    {
+        log.info(String.format("Trying to login: username=[%1s], pass=[%2s]", username, password)); // parola plain text in loguri... PERFECT!!!!
+        String token = sm.Login(username, password);
         if (null == token)
         {
-            LOG.error("Failed to login user: " + "username");
-            return null; // eroare
+            log.error("Failed to login user: " + username);
+            return new ResponseEntity<>("BOULE", HttpStatus.OK);
         }
-        
-        return "bau";
+        log.info(String.format("User [%1s] logged-in with success. Token received: [%2s]", username, token));
+    
+    
+    
+        return new ResponseEntity<>(token, HttpStatus.NOT_FOUND);
     }
 }

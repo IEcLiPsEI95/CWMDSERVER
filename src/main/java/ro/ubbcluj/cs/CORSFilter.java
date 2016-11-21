@@ -1,11 +1,9 @@
 package ro.ubbcluj.cs;
 
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.*;
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -19,14 +17,17 @@ import java.io.IOException;
 public class CORSFilter extends OncePerRequestFilter
 {
     static final String ORIGIN = "Origin";
+    private static Logger log = LogManager.getLogger(CORSFilter.class);
     
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException
     {
-        System.out.println(request.getHeader(ORIGIN));
-        System.out.println(request.getMethod());
-        if (request.getHeader(ORIGIN).equals("null"))
+        log.info("Origin: " + request.getHeader(ORIGIN));
+        log.info("Method: " + request.getMethod());
+        log.info("getRequestURI: " + request.getRequestURI());
+        
+        if (null != request.getHeader(ORIGIN) && request.getHeader(ORIGIN).equals("null"))
         {
             String origin = request.getHeader(ORIGIN);
             response.setHeader("Access-Control-Allow-Origin", "*");//* or origin as u prefer

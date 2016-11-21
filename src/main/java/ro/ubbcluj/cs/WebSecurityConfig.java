@@ -34,7 +34,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter
         http
                 .addFilterBefore(new CORSFilter(), ChannelProcessingFilter.class)
                 .authorizeRequests()
-                .antMatchers("/api/**").permitAll()
+                .antMatchers("/**").permitAll()
                 .and()
                 .httpBasic()
                 .and()

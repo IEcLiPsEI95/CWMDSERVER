@@ -2,22 +2,28 @@ package ro.ubbcluj.cs.session;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Configurable;
+import org.springframework.stereotype.Component;
+import ro.ubbcluj.cs.controller.UserController;
 import ro.ubbcluj.cs.domain.User;
 
 import ro.ubbcluj.cs.domain.UserPerm;
+import ro.ubbcluj.cs.repository.UserRepository;
 import sun.awt.Mutex;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.*;
 
-
+@Component
+@Configurable
 public class SessionManager
 {
     private static SessionManager instance = null;
     
-    private Object repo;
-    private static Logger LOG = LogManager.getLogger("file");
+    
+    private static Logger log = LogManager.getLogger(SessionManager.class);
     
     private Mutex                   listMutex;
     private HashMap<String, User>   dictUsers;
@@ -26,23 +32,30 @@ public class SessionManager
     private byte                    secret2;
     private char                    padding;
     private CleanupThread           hThCleanup;
+    private final long              maxMils     = 10 * 1000; //60 * 60 * 1000;
     
-    public static SessionManager getInstance()
-    {
-        if (instance == null)
-        {
-            synchronized (SessionManager.class)
-            {
-                if (instance == null)
-                {
-                    instance = new SessionManager();
-                }
-            }
-        }
-        return instance;
-    }
+    @Autowired
+    private UserController ctrlUser;// = UserController.getInstance();
     
-    private SessionManager()
+    @Autowired
+    private UserRepository repoUser;
+//    
+//    public static SessionManager getInstance()
+//    {
+//        if (instance == null)
+//        {
+//            synchronized (SessionManager.class)
+//            {
+//                if (instance == null)
+//                {
+//                    instance = new SessionManager();
+//                }
+//            }
+//        }
+//        return instance;
+//    }
+    
+    public SessionManager()
     {
         this.dictUsers  = new HashMap<>();
         this.random     = new SecureRandom();
@@ -53,38 +66,35 @@ public class SessionManager
         this.secret2    = (byte) (random.nextInt(50) + 5);
         this.padding    = (char) (random.nextInt(26) + 'A');
         
-        this.hThCleanup = new CleanupThread(listMutex, dictUsers);
-        this.hThCleanup.run();
-        
+        this.hThCleanup = new CleanupThread(listMutex, dictUsers, maxMils);
+        this.hThCleanup.start();
     }
     
     public String Login(String username, String password)
     {
         try
         {
-            String token;
-            
-            User user = this.GetFakeUser(username, password);
+            User user = this.GetUser(username, password);
             if (null == user)
             {
-                LOG.error("Login :: Failed to get user " + username + " from repository");
+                log.error("Login :: Failed to get user " + username + " from repository");
                 return null;
             }
-            
-            token = this.AddUser(user);
+    
+            String token = this.AddUser(user);
             if (null == token)
             {
-                LOG.error("Login :: Failed to add " + username + " in memory");
+                log.error("Login :: Failed to add " + username + " in memory");
                 return null;
             }
             
-            LOG.info("User " + username + " is now logged in");
+            log.info("User " + username + " is now logged in");
             return token;
         }
         catch (Exception ex)
         {
-            LOG.error("Login :: bag pula in java");
-            LOG.error(ex.toString());
+            log.error("Login :: bag pula in java");
+            log.error(ex.toString());
             return null;
         }
     }
@@ -98,7 +108,7 @@ public class SessionManager
         
         if (null == username)
         {
-            LOG.error("Could not get username from token " + token);
+            log.error("Could not get username from token " + token);
             return null;
         }
         
@@ -108,15 +118,22 @@ public class SessionManager
         
         if ((null == user) || !(user.getToken().equals(token)))
         {
-            LOG.error("No user is logged in with token " + token);
+            log.error("No user is logged in with token " + token);
             return null;
         }
         
-        LOG.info("Found " + user.getUsername() + " for token " + token);
-        LOG.info("User " + user.getUsername() + " has " + user.getPermissions() + " rights. Required rights: " + requiredPermissions);
+        if ((System.currentTimeMillis() - user.getLoggedInTime()) >= (maxMils - 1))
+        {
+            log.error("Token expired for user: " + user.getUsername());
+            ResetTokeForUser(user.getUsername());
+            return null;
+        }
+        
+        log.info("Found " + user.getUsername() + " for token " + token);
+        log.info("User " + user.getUsername() + " has " + user.getPermissions() + " rights. Required rights: " + requiredPermissions);
         
         result = (0 != (user.getPermissions() & requiredPermissions));
-        LOG.info("User " + user.getUsername() + " has " + (result ? "ENOUGH" : "INSUFFICIENT") + " rights");
+        log.info("User " + user.getUsername() + " has " + (result ? "ENOUGH" : "INSUFFICIENT") + " rights");
         
         user.setLoggedInTime(System.currentTimeMillis());
         return user;
@@ -128,7 +145,7 @@ public class SessionManager
         
         if (dictUsers.containsKey(user.getUsername()))
         {
-            LOG.error("User " + user.getUsername() + " is already logged in.");
+            log.error("User " + user.getUsername() + " is already logged in.");
             listMutex.unlock();
             return null;
         }
@@ -141,7 +158,7 @@ public class SessionManager
         
         listMutex.unlock();
         
-        LOG.info("Token [" + token + "] was created for user " + user.getUsername());
+        log.info("Token [" + token + "] was created for user " + user.getUsername());
         return token;
     }
     
@@ -181,7 +198,7 @@ public class SessionManager
     {
         if (null == token || token.isEmpty() || token.length() < 10)
         {
-            LOG.error("token is null / empty / too short");
+            log.error("token is null / empty / too short");
             return  null;
         }
         
@@ -193,7 +210,7 @@ public class SessionManager
         
         if (token.length() < len + 5)
         {
-            LOG.error("token [" + token + "] is to short");
+            log.error("token [" + token + "] is to short");
             return  null;
         }
         
@@ -207,23 +224,19 @@ public class SessionManager
         return new String(auxUser);
     }
     
-    private User GetFakeUser(String username, String password)
+    private void ResetTokeForUser(String username)
     {
-        if (username.equals("abcdefgh@aaaa.com") && password.equals("a"))
-        {
-            return new User(username, password, UserPerm.PERM_MODIFY);
-        }
+        // nu stiu sigur daca are vreun rost functia asta, da' o las momentan
+        // probabil ca nu e nevoie sa fac de 2 ori get... da mai bine asa decat sa ma risc cu java...
         
-        if (username.equals("b@b.com") && password.equals("b"))
-        {
-            return new User(username, password, UserPerm.PERM_ADD | UserPerm.PERM_READ | UserPerm.PERM_DELETE);
-        }
-        
-        if (username.equals("a") && password.equals("a"))
-        {
-            return new User(username, password, UserPerm.PERM_ALL);
-        }
-        
-        return null;
+        listMutex.lock();
+        dictUsers.get(username).setToken(null);
+        dictUsers.get(username).setLoggedInTime(0);
+        listMutex.unlock();
+    }
+    
+    private User GetUser(String username, String password)
+    {
+        return ctrlUser.GetUserByUsernameAndPassword(username, password);
     }
 }

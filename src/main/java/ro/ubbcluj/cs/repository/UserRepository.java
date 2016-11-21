@@ -6,6 +6,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ro.ubbcluj.cs.domain.User;
+import ro.ubbcluj.cs.domain.UserPerm;
 
 import java.sql.PreparedStatement;
 import java.util.List;
@@ -68,6 +69,25 @@ public class UserRepository {
      * @throws UsernameIsNull daca username == null
      */
     public User getUserByUsernameAndPassword(String username, String password) throws PasswordIsNull, UsernameIsNull {
+    
+//    
+//        if (username.equals("abcdefgh@aaaa.com") && password.equals("abc"))
+//        {
+//            return new User(username, password, UserPerm.PERM_MODIFY);
+//        }
+//    
+//        if (username.equals("b@b.com") && password.equals("b"))
+//        {
+//            return new User(username, password, UserPerm.PERM_ADD | UserPerm.PERM_READ | UserPerm.PERM_DELETE);
+//        }
+//    
+//        if (username.equals("a") && password.equals("a"))
+//        {
+//            return new User(username, password, UserPerm.PERM_ALL);
+//        }
+//    
+//        return null;
+//        
         if (password == null) throw new PasswordIsNull();
         if (username == null) throw new UsernameIsNull();
         try {
