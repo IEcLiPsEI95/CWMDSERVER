@@ -2,6 +2,7 @@ package ro.ubbcluj.cs.session;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.plugins.convert.TypeConverters;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.stereotype.Component;
@@ -32,28 +33,13 @@ public class SessionManager
     private byte                    secret2;
     private char                    padding;
     private CleanupThread           hThCleanup;
-    private final long              maxMils     = 10 * 1000; //60 * 60 * 1000;
+    private final long              maxMils     = 60 * 60 * 1000;
     
     @Autowired
     private UserController ctrlUser;// = UserController.getInstance();
     
     @Autowired
-    private UserRepository repoUser;
-//    
-//    public static SessionManager getInstance()
-//    {
-//        if (instance == null)
-//        {
-//            synchronized (SessionManager.class)
-//            {
-//                if (instance == null)
-//                {
-//                    instance = new SessionManager();
-//                }
-//            }
-//        }
-//        return instance;
-//    }
+    private UserRepository repoUser; // mi frica sa il sterg
     
     public SessionManager()
     {
@@ -186,9 +172,15 @@ public class SessionManager
             auxToken[5 + i] = (char) (user.getUsername().charAt(i) ^ secret1);
         }
         
-        token = new String(auxToken);
-        token = token + (new BigInteger(130, random)).toString(32) +
-                (new BigInteger(130, random)).toString(32) + (new BigInteger(130, random)).toString(32);
+        StringBuilder sb = new StringBuilder();
+        for (char c : auxToken)
+        {
+            if (0 == c) break;
+            sb.append(c);
+        }
+        
+        token = sb.toString();
+        token = token + (new BigInteger(130, random)).toString(32) + (new BigInteger(130, random)).toString(32) + (new BigInteger(130, random)).toString(32);
         
         System.out.println("TOKEEEEEEEEEEEN: " + token);
         return token;

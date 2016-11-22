@@ -43,14 +43,15 @@ public class UserRepository {
      * @return null daca user-ul nu este in baza de date sau user-ul care sa sters
      * @throws InvalidUserId daca userId este <= 0
      */
-    public User delete(int userId) throws InvalidUserId {
-        User user = getUserById(userId);
+    public User delete(String username) throws InvalidUserId, UsersUsernameIsNull
+    {
+        User user = getUserByUsername(username);
         if (user != null) {
             try {
                 jdbcTemplate.update(connection -> {
                     PreparedStatement ps;
-                    ps = connection.prepareStatement("DELETE FROM users WHERE id=?");
-                    ps.setInt(1, userId);
+                    ps = connection.prepareStatement("DELETE FROM users WHERE username=?");
+                    ps.setString(1, username);
                     return ps;
                 });
                 return user;
@@ -69,25 +70,7 @@ public class UserRepository {
      * @throws UsernameIsNull daca username == null
      */
     public User getUserByUsernameAndPassword(String username, String password) throws PasswordIsNull, UsernameIsNull {
-    
-//    
-//        if (username.equals("abcdefgh@aaaa.com") && password.equals("abc"))
-//        {
-//            return new User(username, password, UserPerm.PERM_MODIFY);
-//        }
-//    
-//        if (username.equals("b@b.com") && password.equals("b"))
-//        {
-//            return new User(username, password, UserPerm.PERM_ADD | UserPerm.PERM_READ | UserPerm.PERM_DELETE);
-//        }
-//    
-//        if (username.equals("a") && password.equals("a"))
-//        {
-//            return new User(username, password, UserPerm.PERM_ALL);
-//        }
-//    
-//        return null;
-//        
+ 
         if (password == null) throw new PasswordIsNull();
         if (username == null) throw new UsernameIsNull();
         try {
@@ -174,7 +157,7 @@ public class UserRepository {
         }
     }
 
-    private User getUserById(int userId) throws InvalidUserId {
+    public User getUserById(int userId) throws InvalidUserId {
         if (userId <= 0) throw new InvalidUserId();
 
         try {
@@ -184,7 +167,18 @@ public class UserRepository {
             throw e;
         }
     }
-
+    
+    public User getUserByUsername(String username) throws UsersUsernameIsNull {
+        if (username == null) throw new UsersUsernameIsNull();
+        
+        try {
+            List<User> users = jdbcTemplate.query("SELECT id, username, password, permissions FROM users WHERE username = ?", new Object[]{username}, new UserRowMapper());
+            return users.size() == 0 ? null : users.get(0);
+        } catch (Exception e) {
+            throw e;
+        }
+    }
+    
     private int insertAndGetId(User user) throws UserIsNull, UsersPasswordIsNull, UsersUsernameIsNull {
         if (user == null) throw new UserIsNull();
         if (user.getPassword() == null) throw new UsersPasswordIsNull();

@@ -57,4 +57,56 @@ public class UserController
             return null;
         }
     }
+    
+    public User GetUserByUsername(String username)
+    {
+        try
+        {
+            return repoUser.getUserByUsername(username);
+        } 
+        catch (UserRepository.UsersUsernameIsNull ignore)
+        {
+            return null;
+        }
+    }
+    
+    public boolean AddUser(String username, String password, long permissions)
+    {
+        if (null == username || null == password)
+        {
+            log.error("(null == username || null == password)");
+            return false;
+        }
+        
+        User user = new User(username, password, permissions);
+    
+        try
+        {
+            repoUser.insert(user);
+        } 
+        catch (Throwable plm)
+        {
+            log.error("Failed to insert user: " + username);
+            log.error(plm.toString());
+            return false;
+        }
+        
+        return  true;
+    }
+    
+    public boolean DeleteUser(String username)
+    {
+        try
+        {
+            repoUser.delete(username);
+        } 
+        catch (Throwable ex)
+        {
+            log.error("Failed to delete user: " + username);
+            log.error(ex.toString());
+            return false;
+        }
+        
+        return true;
+    }
 }
