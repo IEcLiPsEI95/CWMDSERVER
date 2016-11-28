@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.plugins.convert.TypeConverters;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import ro.ubbcluj.cs.controller.UserController;
 import ro.ubbcluj.cs.domain.User;
@@ -21,11 +22,10 @@ import java.util.*;
 @Configurable
 public class SessionManager
 {
-    private static SessionManager instance = null;
-    
     
     private static Logger log = LogManager.getLogger(SessionManager.class);
     
+    private final String tokenPrefix = "Bearer ";
     private Mutex                   listMutex;
     private HashMap<String, User>   dictUsers;
     private SecureRandom            random;
@@ -52,21 +52,20 @@ public class SessionManager
         this.secret2    = (byte) (random.nextInt(50) + 5);
         this.padding    = (char) (random.nextInt(26) + 'A');
         
+        log.info("secret1: " + this.secret1);
+        log.info("secret2: " + this.secret2);
+        log.info("padding: " + this.padding);
+        
         this.hThCleanup = new CleanupThread(listMutex, dictUsers, maxMils);
         this.hThCleanup.start();
     }
     
-    public String Login(String username, String password)
+    public User Login(String username, String password) throws UserController.RequestException
     {
         try
         {
-            User user = this.GetUser(username, password);
-            if (null == user)
-            {
-                log.error("Login :: Failed to get user " + username + " from repository");
-                return null;
-            }
-    
+            User user = ctrlUser.GetUserByUsernameAndPassword(username, password);
+            
             String token = this.AddUser(user);
             if (null == token)
             {
@@ -75,7 +74,7 @@ public class SessionManager
             }
             
             log.info("User " + username + " is now logged in");
-            return token;
+            return user;
         }
         catch (Exception ex)
         {
@@ -86,16 +85,22 @@ public class SessionManager
     }
     
     // verifica tokenul daca este logat si daca are permisiunile necesare
-    public User GetLoggedInUser(String token, int requiredPermissions)
+    public User GetLoggedInUser(String token, int requiredPermissions) throws UserController.RequestException
     {
+        if (token.startsWith(tokenPrefix))
+        {
+            token = token.substring(0, tokenPrefix.length());
+        }
+        
         User user;
         boolean result;
-        String username = GetUsernameFromToken(token);
+        String username;
         
+        username = GetUsernameFromToken(token);
         if (null == username)
         {
-            log.error("Could not get username from token " + token);
-            return null;
+            log.error("Could not get username from token [" + token + "]");
+            throw new UserController.RequestException("User is not logged-in (Invalid token)", HttpStatus.BAD_REQUEST);
         }
         
         listMutex.lock();
@@ -104,15 +109,15 @@ public class SessionManager
         
         if ((null == user) || !(user.getToken().equals(token)))
         {
-            log.error("No user is logged in with token " + token);
-            return null;
+            log.error(String.format("Got username [%1s] from token [%2s], but there is no such user with this token ", username, token));
+            throw new UserController.RequestException("User is not logged-in (session may be expired)", HttpStatus.NOT_FOUND);
         }
         
         if ((System.currentTimeMillis() - user.getLoggedInTime()) >= (maxMils - 1))
         {
             log.error("Token expired for user: " + user.getUsername());
             ResetTokeForUser(user.getUsername());
-            return null;
+            throw new UserController.RequestException("Session expired", HttpStatus.BAD_REQUEST);
         }
         
         log.info("Found " + user.getUsername() + " for token " + token);
@@ -125,7 +130,7 @@ public class SessionManager
         return user;
     }
     
-    private String AddUser(User user)
+    private String AddUser(User user) throws UserController.RequestException
     {
         listMutex.lock();
         
@@ -133,7 +138,7 @@ public class SessionManager
         {
             log.error("User " + user.getUsername() + " is already logged in.");
             listMutex.unlock();
-            return null;
+            throw new UserController.RequestException("User " + user.getUsername() + " is already logged in.", HttpStatus.CONFLICT);
         }
         
         user.setLoggedInTime(System.currentTimeMillis());
@@ -191,13 +196,23 @@ public class SessionManager
         if (null == token || token.isEmpty() || token.length() < 10)
         {
             log.error("token is null / empty / too short");
-            return  null;
+            return null;
         }
         
         byte startIndex;
         //noinspection StatementWithEmptyBody
-        for (startIndex = 0; token.charAt(startIndex) == padding; startIndex++);
-        int len = Integer.parseInt(token.substring(startIndex, 5));
+        for (startIndex = 0; token.charAt(startIndex) == padding && startIndex < 5; startIndex++);
+        int len;
+        try
+        {
+            len = Integer.parseInt(token.substring(startIndex, 5));    
+        }
+        catch (NumberFormatException ignored)
+        {
+            log.error("invalid format for token");
+            return null;
+        }
+        
         len = (len - secret1) / secret2;
         
         if (token.length() < len + 5)
@@ -225,10 +240,5 @@ public class SessionManager
         dictUsers.get(username).setToken(null);
         dictUsers.get(username).setLoggedInTime(0);
         listMutex.unlock();
-    }
-    
-    private User GetUser(String username, String password)
-    {
-        return ctrlUser.GetUserByUsernameAndPassword(username, password);
     }
 }

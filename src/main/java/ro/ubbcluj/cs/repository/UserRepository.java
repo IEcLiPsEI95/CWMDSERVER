@@ -6,7 +6,6 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ro.ubbcluj.cs.domain.User;
-import ro.ubbcluj.cs.domain.UserPerm;
 
 import java.sql.PreparedStatement;
 import java.util.List;
@@ -39,7 +38,7 @@ public class UserRepository {
     }
 
     /**
-     * @param userId id-ul user-ului de sters
+     
      * @return null daca user-ul nu este in baza de date sau user-ul care sa sters
      * @throws InvalidUserId daca userId este <= 0
      */
@@ -70,9 +69,10 @@ public class UserRepository {
      * @throws UsernameIsNull daca username == null
      */
     public User getUserByUsernameAndPassword(String username, String password) throws PasswordIsNull, UsernameIsNull {
- 
-        if (password == null) throw new PasswordIsNull();
+    
         if (username == null) throw new UsernameIsNull();
+        if (password == null) throw new PasswordIsNull();
+
         try {
 
             List<User> users = jdbcTemplate.query(
@@ -111,23 +111,23 @@ public class UserRepository {
     }
 
     /**
-     * @param userId   id-ul userului pentru care se face update
+     
      * @param password noua parola
      * @throws InvalidUserId  daca userId <= 0
      * @throws UserNotFound   daca user-ul nu exista in baza de date
      * @throws PasswordIsNull daca password == null
      */
-    public void updatePassword(int userId, String password) throws InvalidUserId, UserNotFound, PasswordIsNull {
-        if (userId <= 0) throw new InvalidUserId();
+    public void updatePassword(String username, String password) throws UsernameIsNull, UserNotFound, PasswordIsNull, UsersUsernameIsNull {
+        if (username == null) throw new  UsernameIsNull();
         if (password == null) throw new PasswordIsNull();
-        if (getUserById(userId) == null) throw new UserNotFound();
-
+        if (getUserByUsername(username) == null) throw new UserNotFound();
+        
         try {
             jdbcTemplate.update(connection -> {
                 PreparedStatement ps;
-                ps = connection.prepareStatement("UPDATE users SET password = ? WHERE id = ?");
+                ps = connection.prepareStatement("UPDATE users SET password = ? WHERE username = ?");
                 ps.setString(1, password);
-                ps.setInt(2, userId);
+                ps.setString(2, username);
                 return ps;
             });
         } catch (Exception e) {
@@ -136,20 +136,20 @@ public class UserRepository {
     }
 
     /**
-     * @param userId      id-ul userului pentru care se face update
+     
      * @param permissions noile permisiuni
      * @throws InvalidUserId daca userId <= 0
      * @throws UserNotFound  daca user-ul nu exista in baza de date
      */
-    public void updatePersmissions(int userId, long permissions) throws InvalidUserId, UserNotFound {
-        if (userId <= 0) throw new InvalidUserId();
-        if (getUserById(userId) == null) throw new UserNotFound();
+    public void updatePermissions(String  username, long permissions) throws UsersUsernameIsNull, UserNotFound {
+        if (username == null) throw new UsersUsernameIsNull();
+        if (getUserByUsername(username) == null) throw new UserNotFound();
         try {
             jdbcTemplate.update(connection -> {
                 PreparedStatement ps;
-                ps = connection.prepareStatement("UPDATE users SET permissions = ? WHERE id = ?");
+                ps = connection.prepareStatement("UPDATE users SET permissions = ? WHERE username = ?");
                 ps.setLong(1, permissions);
-                ps.setInt(2, userId);
+                ps.setString(2, username);
                 return ps;
             });
         } catch (Exception e) {
@@ -199,8 +199,14 @@ public class UserRepository {
             throw e;
         }
     }
-
-
+    
+    public void updateUser(String username, User user) throws UsernameIsNull, UsersUsernameIsNull, UserNotFound, PasswordIsNull
+    {
+        updatePassword(username, user.getPassword());
+        updatePermissions(username, user.getPermissions());
+    }
+    
+    
     public class InvalidUserId extends Throwable {
     }
 

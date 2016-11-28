@@ -3,6 +3,7 @@ package ro.ubbcluj.cs.controller;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import ro.ubbcluj.cs.domain.User;
 import ro.ubbcluj.cs.domain.UserPerm;
@@ -15,50 +16,39 @@ import ro.ubbcluj.cs.repository.UserRepository;
 @Component
 public class UserController
 {
-    private static UserController instance = null;
     private static Logger log = LogManager.getLogger(UserController.class);
     
     @Autowired
     private UserRepository repoUser;
-//    
-//    
-//    public static UserController getInstance()
-//    {
-//        if (instance == null)
-//        {
-//            synchronized (UserController.class)
-//            {
-//                if (instance == null)
-//                {
-//                    instance = new UserController();
-//                }
-//            }
-//        }
-//        return instance;
-//    }
-    
+
     public UserController()
     {
         log.info("UserController()");
     }
     
-    public User GetUserByUsernameAndPassword(String username, String password)
+    public User GetUserByUsernameAndPassword(String username, String password) throws RequestException
     {
         try
         {
-            return repoUser.getUserByUsernameAndPassword(username, password);
+            User resp = repoUser.getUserByUsernameAndPassword(username, password);
+            if (null == resp)
+            {
+                throw new RequestException("Invalid username or password", HttpStatus.NOT_FOUND);
+            }
+            
+            return resp;
         } 
-        catch (UserRepository.PasswordIsNull passwordIsNull)
+        catch (UserRepository.PasswordIsNull ignored)
         {
-            return null;
+            throw new RequestException("Password is empty", HttpStatus.BAD_REQUEST);
         } 
-        catch (UserRepository.UsernameIsNull usernameIsNull)
+        catch (UserRepository.UsernameIsNull ignored)
         {
-            return null;
+            throw new RequestException("Username is empty", HttpStatus.BAD_REQUEST);
         }
     }
     
-    public User GetUserByUsername(String username)
+    public User GetUserByUsername(String username) throws RequestException
     {
         try
         {
@@ -66,7 +56,7 @@ public class UserController
         } 
         catch (UserRepository.UsersUsernameIsNull ignore)
         {
-            return null;
+            throw new RequestException("Username is empty", HttpStatus.BAD_REQUEST);
         }
     }
     
@@ -108,5 +98,38 @@ public class UserController
         }
         
         return true;
+    }
+    
+    public boolean UpdateUser(String username, String password, long permissions)
+    {
+        User user = new User(username, password, permissions);
+        
+        try
+        {
+            repoUser.updateUser(username, user);
+        }
+        catch (Throwable ex)
+        {
+            log.error("updateUser(" + username + ") failed");
+            return false;
+        }
+        
+        return true;
+    }
+    
+    public static class RequestException extends Throwable
+    {
+        private HttpStatus status;
+    
+        public RequestException(String message, HttpStatus status)
+        {
+            super(message);
+            this.status = status;
+        }
+    
+        public HttpStatus getStatus()
+        {
+            return status;
+        }
     }
 }

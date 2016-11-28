@@ -23,7 +23,7 @@ public class User
         token               = null;
         loggedInTime        = 0;
     }
-
+        
     public User() {
 
     }
