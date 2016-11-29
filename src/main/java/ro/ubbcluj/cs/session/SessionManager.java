@@ -36,11 +36,8 @@ public class SessionManager
     private final long              maxMils     = 60 * 60 * 1000;
     
     @Autowired
-    private UserController ctrlUser;// = UserController.getInstance();
-    
-    @Autowired
-    private UserRepository repoUser; // mi frica sa il sterg
-    
+    private UserController ctrlUser;
+
     public SessionManager()
     {
         this.dictUsers  = new HashMap<>();
@@ -84,8 +81,49 @@ public class SessionManager
         }
     }
     
+    
+    public void Logout(String username) throws UserController.RequestException
+    {
+        if (null == username || username.isEmpty())
+        {
+            throw new UserController.RequestException("Username was not provided", HttpStatus.BAD_REQUEST);
+        }
+        
+        if (!RemoveUser(username))
+        {
+            throw new UserController.RequestException("Username " + username + " is not logged-in", HttpStatus.NOT_FOUND);
+        }
+    }
+    
+    public boolean RemoveUser(String username)
+    {
+        if (null == username || username.isEmpty())
+        {
+            return false;
+        }
+        
+        listMutex.lock();
+        
+        User user = dictUsers.get(username);
+        if (null == user)
+        {
+            log.warn(String.format("Username [%s] is not logged-in", username));
+            listMutex.unlock();
+            return false;
+        }
+        
+        user.setToken(null);
+        user.setLoggedInTime(0);
+        dictUsers.remove(username);
+        
+        listMutex.unlock();
+        
+        log.info(String.format("Username [%s] was loggedout", username));
+        return true;
+    }
+    
     // verifica tokenul daca este logat si daca are permisiunile necesare
-    public User GetLoggedInUser(String token, int requiredPermissions) throws UserController.RequestException
+    public User GetLoggedInUser(String token, long requiredPermissions) throws UserController.RequestException
     {
         if (token.startsWith(tokenPrefix))
         {
@@ -116,20 +154,50 @@ public class SessionManager
         if ((System.currentTimeMillis() - user.getLoggedInTime()) >= (maxMils - 1))
         {
             log.error("Token expired for user: " + user.getUsername());
-            ResetTokeForUser(user.getUsername());
+            RemoveUser(user.getUsername());
             throw new UserController.RequestException("Session expired", HttpStatus.BAD_REQUEST);
         }
         
         log.info("Found " + user.getUsername() + " for token " + token);
         log.info("User " + user.getUsername() + " has " + user.getPermissions() + " rights. Required rights: " + requiredPermissions);
         
-        result = (0 != (user.getPermissions() & requiredPermissions));
+        result = (requiredPermissions == (user.getPermissions() & requiredPermissions));
         log.info("User " + user.getUsername() + " has " + (result ? "ENOUGH" : "INSUFFICIENT") + " rights");
+    
+        if (!result)
+        {
+            throw new UserController.RequestException("ACCESS DENIED. Not enough rights.", HttpStatus.NOT_ACCEPTABLE);
+        }
         
         user.setLoggedInTime(System.currentTimeMillis());
         return user;
     }
     
+    public void UpdateInfo(User newUser)
+    {
+        if (null == newUser) return;
+        
+        listMutex.lock();
+        
+        User existingUser = dictUsers.get(newUser.getUsername());
+        if (null == existingUser)
+        {
+            listMutex.unlock();
+            log.warn(String.format("Username [%s] is not logged-in", newUser.getUsername()));
+            return;
+        }
+        
+        existingUser.setPassword(newUser.getPassword());
+        existingUser.setPermissions(newUser.getPermissions());
+        listMutex.unlock();
+        
+        log.info(String.format("Username [%s] was updated with success", newUser.getUsername()));
+    }
+    
+    
+    //
+    // PRIVATE FUNCTIONS
+    //
     private String AddUser(User user) throws UserController.RequestException
     {
         listMutex.lock();
@@ -229,16 +297,5 @@ public class SessionManager
         }
         
         return new String(auxUser);
-    }
-    
-    private void ResetTokeForUser(String username)
-    {
-        // nu stiu sigur daca are vreun rost functia asta, da' o las momentan
-        // probabil ca nu e nevoie sa fac de 2 ori get... da mai bine asa decat sa ma risc cu java...
-        
-        listMutex.lock();
-        dictUsers.get(username).setToken(null);
-        dictUsers.get(username).setLoggedInTime(0);
-        listMutex.unlock();
     }
 }

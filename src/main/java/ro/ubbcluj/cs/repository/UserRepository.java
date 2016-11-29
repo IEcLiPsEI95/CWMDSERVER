@@ -1,13 +1,17 @@
 package ro.ubbcluj.cs.repository;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
+import ro.ubbcluj.cs.controller.UserController;
 import ro.ubbcluj.cs.domain.User;
 
 import java.sql.PreparedStatement;
+import java.sql.Statement;
 import java.util.List;
 
 /**
@@ -17,7 +21,9 @@ import java.util.List;
  */
 @Repository
 public class UserRepository {
-
+    
+    private static Logger log = LogManager.getLogger(UserRepository.class);
+    
     @Autowired
     JdbcTemplate jdbcTemplate;
 
@@ -33,6 +39,7 @@ public class UserRepository {
         try {
             user.setId(insertAndGetId(user));
         } catch (NullPointerException e) {
+            log.error(e.getMessage());
             throw new UserIsNull();
         }
     }
@@ -55,6 +62,7 @@ public class UserRepository {
                 });
                 return user;
             } catch (Exception e) {
+                log.error(e.getMessage());
                 throw e;
             }
         }
@@ -80,6 +88,7 @@ public class UserRepository {
                     new Object[]{username, password}, new UserRowMapper());
             return users.size() == 0 ? null : users.get(0);
         } catch (Exception e) {
+            log.error(e.getMessage());
             throw e;
         }
     }
@@ -131,6 +140,7 @@ public class UserRepository {
                 return ps;
             });
         } catch (Exception e) {
+            log.error(e.getMessage());
             throw e;
         }
     }
@@ -153,6 +163,7 @@ public class UserRepository {
                 return ps;
             });
         } catch (Exception e) {
+            log.error(e.getMessage());
             throw e;
         }
     }
@@ -164,6 +175,7 @@ public class UserRepository {
             List<User> users = jdbcTemplate.query("SELECT id, username, password, permissions FROM users WHERE id = ?", new Object[]{userId}, new UserRowMapper());
             return users.size() == 0 ? null : users.get(0);
         } catch (Exception e) {
+            log.error(e.getMessage());
             throw e;
         }
     }
@@ -172,9 +184,11 @@ public class UserRepository {
         if (username == null) throw new UsersUsernameIsNull();
         
         try {
-            List<User> users = jdbcTemplate.query("SELECT id, username, password, permissions FROM users WHERE username = ?", new Object[]{username}, new UserRowMapper());
+            List<User> users = jdbcTemplate.query("SELECT id, username, password, permissions FROM users WHERE username = ?", 
+                    new Object[]{username}, new UserRowMapper());
             return users.size() == 0 ? null : users.get(0);
         } catch (Exception e) {
+            log.error(e.getMessage());
             throw e;
         }
     }
@@ -188,14 +202,20 @@ public class UserRepository {
             KeyHolder keyHolder = new GeneratedKeyHolder();
             jdbcTemplate.update(connection -> {
                 PreparedStatement ps;
-                ps = connection.prepareStatement("INSERT INTO users (username, password, permissions) VALUES (?,?,?)");
+                ps = connection.prepareStatement(
+                        "INSERT INTO users (username, password, permissions) VALUES (?,?,?)", 
+                        Statement.RETURN_GENERATED_KEYS
+                );
+                
                 ps.setString(1, user.getUsername());
                 ps.setString(2, user.getPassword());
                 ps.setLong(3, user.getPermissions());
                 return ps;
+            
             }, keyHolder);
             return keyHolder.getKey().intValue();
         } catch (Exception e) {
+            log.error(e.getMessage());
             throw e;
         }
     }
@@ -205,7 +225,6 @@ public class UserRepository {
         updatePassword(username, user.getPassword());
         updatePermissions(username, user.getPermissions());
     }
-    
     
     public class InvalidUserId extends Throwable {
     }

@@ -1,6 +1,7 @@
 package ro.ubbcluj.cs.domain;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -95,7 +96,7 @@ public class CWMDRequestResponse
         resp.put("permissions", String.valueOf(permissions));
         resp.put("status",      String.valueOf(status));
         
-        Gson g = new Gson();
+        Gson g = new GsonBuilder().disableHtmlEscaping().create();
         String jsonResp = g.toJson(resp);
     
         System.out.println("Response json: " + jsonResp);

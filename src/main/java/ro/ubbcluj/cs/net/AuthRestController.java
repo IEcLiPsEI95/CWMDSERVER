@@ -14,6 +14,8 @@ import ro.ubbcluj.cs.domain.User;
 import ro.ubbcluj.cs.domain.UserPerm;
 import ro.ubbcluj.cs.session.SessionManager;
 
+import java.util.List;
+
 /**
  * Created by hlupean on 16-Nov-16.
  */
@@ -32,10 +34,7 @@ public class AuthRestController
     
     @Autowired
     private UserController ctrlUser;
-//    
-//    @Autowired
-//    private UserRepository repoUser;
-//    
+    
     AuthRestController()
     {
         log.info("AuthRestController()");
@@ -44,14 +43,13 @@ public class AuthRestController
     
     // asta ii doar de test... sa vedem ca merge conexiunea
     @RequestMapping(value = "test/id={id}", method = RequestMethod.GET)
-    public
-    @ResponseBody
-    String Test(@PathVariable int id)
+    public @ResponseBody String Test(@PathVariable int id)
     {
         log.info("s-o conectat: " + id);
         return Integer.toString(id * 2);
     }
-
+    
+    
     @RequestMapping(value = "login", method = RequestMethod.POST)
     public ResponseEntity<?> Login(
             @RequestBody User reqUser
@@ -65,7 +63,7 @@ public class AuthRestController
         try
         {
             user = sm.Login(username, password);
-        } 
+        }
         catch (UserController.RequestException e)
         {
             log.error("Failed to login user: " + username);
@@ -75,34 +73,83 @@ public class AuthRestController
         log.info(String.format("User [%1s] logged-in with success. Token received: [%2s]", username, user.getPermissions()));
         return CWMDRequestResponse.createResponse(user.getToken(), "Success", user.getPermissions(), HttpStatus.OK);
     }
- 
+    
+    
+    @RequestMapping(value = "flogout", method = RequestMethod.POST)
+    public ResponseEntity<?> ForceLogout(
+            @RequestHeader(value = TOKEN_HEADER, required = true) String token,
+            @RequestBody User reqUser
+    )
+    {
+        String usernameToLogout = reqUser.getUsername();
+        log.info(String.format("Trying to logout username [%1s]", usernameToLogout));
+        
+        try
+        {
+            User user = sm.GetLoggedInUser(token, UserPerm.PERM_LOGOUT_USER);
+            log.error(String.format("User [%1s] has enough permissions to logout user [%2s]", user.getUsername(), usernameToLogout));
+            
+            sm.Logout(usernameToLogout);
+            log.info(String.format("User [%1s] was logged-out with success by user [%2s]", usernameToLogout, user.getUsername()));
+            
+            return CWMDRequestResponse.createResponse("OK", HttpStatus.OK);
+        }
+        catch (UserController.RequestException e)
+        {
+            log.error(e.getMessage());
+            return CWMDRequestResponse.createResponse(e.getMessage(), e.getStatus());
+        }
+    }
+    
+    @RequestMapping(value = "logout", method = RequestMethod.POST)
+    public ResponseEntity<?> Logout(
+            @RequestHeader(value = TOKEN_HEADER, required = true) String token
+    )
+    {
+        try
+        {
+            User user = sm.GetLoggedInUser(token, 0);
+            log.info(String.format("User [%1s] will be logged-out.", user.getUsername()));
+            
+            sm.Logout(user.getUsername());
+            log.info(String.format("User [%1s] was logged-out with success by user [%2s]", user.getUsername(), user.getUsername()));
+            
+            return CWMDRequestResponse.createResponse("OK", HttpStatus.OK);
+        }
+        catch (UserController.RequestException e)
+        {
+            log.error(e.getMessage());
+            return CWMDRequestResponse.createResponse(e.getMessage(), e.getStatus());
+        }
+    }
+    
     @RequestMapping(value = "getuser", method = RequestMethod.POST)
     public ResponseEntity<?> GetUser(
             @RequestHeader(value = TOKEN_HEADER, required = true) String token,
             @RequestBody User reqUser
-            
     )
     {
         String usernameToGet = reqUser.getUsername();
         log.info(String.format("Trying to get: username=[%1s]", usernameToGet));
-    
+        
         try
         {
-            User user = sm.GetLoggedInUser(token, (int) UserPerm.PERM_GET_USER);
+            User user = sm.GetLoggedInUser(token, UserPerm.PERM_GET_USER);
             log.info(String.format("User [%1s] is trying to get user [%1s}", user.getUsername(), usernameToGet));
             
             User userResp = ctrlUser.GetUserByUsername(usernameToGet);
             log.info(String.format("Found user [%1s]", userResp.getUsername()));
-    
+            
             String response = mapper.writeValueAsString(userResp);
             log.info(response);
             return CWMDRequestResponse.createResponse(response, HttpStatus.OK);
-        } 
+        }
         catch (UserController.RequestException e)
         {
 //            log.error(String.format("User with token [%1s] does not have enough permissions to get user [%2s]", token, usernameToGet));
             return CWMDRequestResponse.createResponse(e.getMessage(), e.getStatus());
-        } catch (JsonProcessingException e)
+        }
+        catch (JsonProcessingException e)
         {
             log.error(String.format("Failed to convert user [%1s] to json", usernameToGet));
             return CWMDRequestResponse.createResponse(String.format("Failed to convert user [%1s] to json", usernameToGet), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -116,102 +163,116 @@ public class AuthRestController
             @RequestBody User reqUser
     )
     {
-        String usernameToAdd = reqUser.getUsername();
-        String password = reqUser.getPassword();
-        long permissions = reqUser.getPermissions();
+        String usernameToAdd    = reqUser.getUsername();
+        String passwordToAdd    = reqUser.getPassword();
+        long permissionsToAdd   = reqUser.getPermissions();
         
         log.info(String.format("Trying to add: username=[%1s]", usernameToAdd));
-    
-        User user = null;
         try
         {
-            user = sm.GetLoggedInUser(token, (int) UserPerm.PERM_ADD_USER);
-        } catch (UserController.RequestException e)
-        {
-            e.printStackTrace();
+            User user = sm.GetLoggedInUser(token, UserPerm.PERM_ADD_USER);
+            log.info(String.format("User [%1s] has enough permissions to add user [%2s]", user.getUsername(), usernameToAdd));
+            
+            ctrlUser.AddUser(usernameToAdd, passwordToAdd, permissionsToAdd);
+            log.info(String.format("User [%1s] was created with success by user [%2s]", usernameToAdd, user.getUsername()));
+            
+            return CWMDRequestResponse.createResponse("OK", HttpStatus.OK);
         }
-        
-        if (null == user)
+        catch (UserController.RequestException e)
         {
-            log.error(String.format("User with token [%1s] does not have enough permissions to add user [%2s]", token, usernameToAdd));
-            return new ResponseEntity<>("Failed to add user", HttpStatus.NOT_FOUND);
+            log.error(e.getMessage());
+            return CWMDRequestResponse.createResponse(e.getMessage(), e.getStatus());
         }
-        
-        if (!ctrlUser.AddUser(usernameToAdd, password, permissions))
-        {
-            log.error("Failed to add user: " + usernameToAdd);
-            return new ResponseEntity<>("Failed to add user", HttpStatus.NOT_FOUND);
-        }
-        
-        return new ResponseEntity<>("OK", HttpStatus.OK);
     }
     
     
     @RequestMapping(value = "deluser", method = RequestMethod.POST)
     public ResponseEntity<?> DeleteUser(
-            @RequestParam(value = "token", required = true) String token,
-            @RequestParam(value = "username", required = true) String usernameToDelete
+            @RequestHeader(value = TOKEN_HEADER, required = true) String token,
+            @RequestBody User reqUser
     )
     {
-        log.info(String.format("Trying to get: username=[%1s]", usernameToDelete));
-    
-        User user = null;
+        String usernameToDelete = reqUser.getUsername(); 
+        log.info(String.format("Trying to delete username [%1s]", usernameToDelete));
+        
         try
         {
-            user = sm.GetLoggedInUser(token, (int) UserPerm.PERM_DELETE_USER);
-        } catch (UserController.RequestException e)
-        {
-            e.printStackTrace();
-        }
-        
-        if (null == user)
-        {
-            log.error(String.format("User with token [%1s] does not have enough permissions to delete user [%2s]", token, usernameToDelete));
-            return new ResponseEntity<>("Failed to delete user", HttpStatus.NOT_FOUND);
-        }
-        
-        if (!ctrlUser.DeleteUser(usernameToDelete))
-        {
-            log.error(String.format("Failed to delete user [%1s] ", usernameToDelete));
-            return new ResponseEntity<>("Failed to delete user", HttpStatus.NOT_FOUND);
-        }
-        
-        return new ResponseEntity<>("OK", HttpStatus.OK);
-    }
+            User user = sm.GetLoggedInUser(token, UserPerm.PERM_DELETE_USER | UserPerm.PERM_LOGOUT_USER);
+            log.info(String.format("User [%1s] has enough permissions to delete user [%2s]", user.getUsername(), usernameToDelete));
     
+            ctrlUser.DeleteUser(usernameToDelete);
+            log.info(String.format("User [%1s] was deleted with success by user [%2s]", usernameToDelete, user.getUsername()));
+            
+            sm.RemoveUser(user.getUsername());
+            return CWMDRequestResponse.createResponse("OK", HttpStatus.OK);
+        }
+        catch (UserController.RequestException e)
+        {
+            log.error(e.getMessage());
+            return CWMDRequestResponse.createResponse(e.getMessage(), e.getStatus());
+        }
+    }
     
     @RequestMapping(value = "updateuser", method = RequestMethod.POST)
     public ResponseEntity<?> UpdateUser(
-            @RequestParam(value = "token", required = true) String token,
-            @RequestParam(value = "username", required = true) String usernameToUpdate,
-            @RequestParam(value = "password", required = true) String password,
-            @RequestParam(value = "permissions", required = true) long permissions
+            @RequestHeader(value = TOKEN_HEADER, required = true) String token,
+            @RequestBody User reqUser
     )
     {
-        log.info(String.format("Trying to update: username=[%1s]", usernameToUpdate));
-    
-        User user = null;
+        log.info(String.format("Trying to update: username=[%1s]", reqUser.getUsername()));
+        String usernameToUpdate = reqUser.getUsername();
+        String password = reqUser.getPassword();
+        long permissions = reqUser.getPermissions();
+        
         try
         {
-            user = sm.GetLoggedInUser(token, (int) UserPerm.PERM_ADD_USER);
-        } catch (UserController.RequestException e)
-        {
-            e.printStackTrace();
+            User user = sm.GetLoggedInUser(token, (int) UserPerm.PERM_UPDATE_USER);
+            log.info(String.format("User [%1s] has enough permissions to update user [%2s]", user.getUsername(), usernameToUpdate));
+    
+            ctrlUser.UpdateUser(usernameToUpdate, password, permissions);
+            sm.UpdateInfo(new User(usernameToUpdate, password, permissions));
+            log.info(String.format("User [%1s] was updated with success", usernameToUpdate));
+    
+            
+            
+            return CWMDRequestResponse.createResponse("OK", HttpStatus.OK);
         }
-        
-        if (null == user)
+        catch (UserController.RequestException e)
         {
-            log.error(String.format("User with token [%1s] does not have enough permissions to add user [%2s]", token, usernameToUpdate));
-            return new ResponseEntity<>("Failed to add user", HttpStatus.NOT_FOUND);
+            log.error(e.getMessage());
+            return CWMDRequestResponse.createResponse(e.getMessage(), e.getStatus());
         }
-        
-        if (!ctrlUser.UpdateUser(usernameToUpdate, password, permissions))
-        {
-            log.error("Failed to update user: " + usernameToUpdate);
-            return new ResponseEntity<>("Failed to update user", HttpStatus.NOT_FOUND);
-        }
-        
-        return new ResponseEntity<>("OK", HttpStatus.OK);
     }
     
+    
+    @RequestMapping(value = "getallusers", method = RequestMethod.POST)
+    public ResponseEntity<?> GetAllUser(
+            @RequestHeader(value = TOKEN_HEADER, required = true) String token
+    )
+    {
+        log.info("Trying to get all users");
+        
+        try
+        {
+            User user = sm.GetLoggedInUser(token, UserPerm.PERM_GET_USER);
+            log.info(String.format("User [%1s] is trying to get all users", user.getUsername()));
+            
+            List<User> userResp = ctrlUser.GetAllUsers();
+            log.info(String.format("Found [%1d] users", userResp.size()));
+            
+            String response = mapper.writeValueAsString(userResp);
+            log.info(response);
+            return CWMDRequestResponse.createResponse(response, HttpStatus.OK);
+        }
+        catch (UserController.RequestException e)
+        {
+//            log.error(String.format("User with token [%1s] does not have enough permissions to get user [%2s]", token, usernameToGet));
+            return CWMDRequestResponse.createResponse(e.getMessage(), e.getStatus());
+        }
+        catch (JsonProcessingException e)
+        {
+            log.error(String.format(e.getMessage()));
+            return CWMDRequestResponse.createResponse(String.format(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

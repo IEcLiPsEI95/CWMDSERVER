@@ -9,6 +9,8 @@ import ro.ubbcluj.cs.domain.User;
 import ro.ubbcluj.cs.domain.UserPerm;
 import ro.ubbcluj.cs.repository.UserRepository;
 
+import java.util.List;
+
 /**
  * Created by hlupean on 21-Nov-16.
  */
@@ -60,28 +62,30 @@ public class UserController
         }
     }
     
-    public boolean AddUser(String username, String password, long permissions)
+    public void AddUser(String username, String password, long permissions) throws RequestException
     {
-        if (null == username || null == password)
+        if (null == username || username.isEmpty())
         {
-            log.error("(null == username || null == password)");
-            return false;
+            throw new RequestException("Username was not provided.", HttpStatus.BAD_REQUEST);
+        }
+    
+        if (null == password || password.isEmpty())
+        {
+            throw new RequestException("Password was not provided.", HttpStatus.BAD_REQUEST);
         }
         
-        User user = new User(username, password, permissions);
-    
         try
         {
+            User user = new User(username, password, permissions);
             repoUser.insert(user);
-        } 
-        catch (Throwable plm)
-        {
-            log.error("Failed to insert user: " + username);
-            log.error(plm.toString());
-            return false;
+            log.info("User: " + username + " was added with success");
         }
-        
-        return  true;
+        catch (Throwable e)
+        {
+            log.error("Failed to add user: " + username);
+            log.error(e.getMessage());
+            throw  new RequestException("Insert failed. WHY???", HttpStatus.BAD_REQUEST);
+        }
     }
     
     public boolean DeleteUser(String username)
@@ -100,21 +104,36 @@ public class UserController
         return true;
     }
     
-    public boolean UpdateUser(String username, String password, long permissions)
+    public void UpdateUser(String username, String password, long permissions) throws RequestException
     {
-        User user = new User(username, password, permissions);
-        
+        if (null == username || username.isEmpty())
+        {
+            throw new RequestException("Username was not provided.", HttpStatus.BAD_REQUEST);
+        }
+    
+        if (null == password || password.isEmpty())
+        {
+            throw new RequestException("Password was not provided.", HttpStatus.BAD_REQUEST);
+        }
+    
         try
         {
+            User user = new User(username, password, permissions);
             repoUser.updateUser(username, user);
+            log.info("User: " + username + " was updated with success");
         }
-        catch (Throwable ex)
+        catch (Throwable e)
         {
-            log.error("updateUser(" + username + ") failed");
-            return false;
+            log.error("Failed to update user: " + username);
+            log.error(e.getMessage());
+            throw  new RequestException("Update failed. WHY???", HttpStatus.BAD_REQUEST);
         }
-        
-        return true;
+    }
+    
+    public List<User> GetAllUsers()
+    {
+//        repoUser.getAllUsers();
+        return null;
     }
     
     public static class RequestException extends Throwable

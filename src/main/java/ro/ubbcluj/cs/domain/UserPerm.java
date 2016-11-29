@@ -9,10 +9,12 @@ public class UserPerm
 {
     public static final long PERM_NO                = 0x0;
     
-    public static final long PERM_GET_USER          = 0x1;
-    public static final long PERM_ADD_USER          = 0x2;
-    public static final long PERM_UPDATE_USER       = 0x4;
-    public static final long PERM_DELETE_USER       = 0x8;
+    public static final long PERM_GET_USER          = 0x00000001;
+    public static final long PERM_ADD_USER          = 0x00000002;
+    public static final long PERM_UPDATE_USER       = 0x00000004;
+    public static final long PERM_DELETE_USER       = 0x00000018; // permission to delete users (this includes permission to logout other users)
+    public static final long PERM_LOGOUT_USER       = 0x00000010; // permission to logout OTHER users
+    
     
     public static final long PERM_ALL               = -1; // asta-i dumnezo
 }
