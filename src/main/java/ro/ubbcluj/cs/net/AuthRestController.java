@@ -166,6 +166,10 @@ public class AuthRestController
         String usernameToAdd    = reqUser.getUsername();
         String passwordToAdd    = reqUser.getPassword();
         long permissionsToAdd   = reqUser.getPermissions();
+        String lastname         = reqUser.getLastname();
+        String firstname        = reqUser.getFirstname();
+        String cnp              = reqUser.getCnp();
+        String phone            = reqUser.getPhone();
         
         log.info(String.format("Trying to add: username=[%1s]", usernameToAdd));
         try
@@ -173,7 +177,7 @@ public class AuthRestController
             User user = sm.GetLoggedInUser(token, UserPerm.PERM_ADD_USER);
             log.info(String.format("User [%1s] has enough permissions to add user [%2s]", user.getUsername(), usernameToAdd));
             
-            ctrlUser.AddUser(usernameToAdd, passwordToAdd, permissionsToAdd);
+            ctrlUser.AddUser(usernameToAdd, passwordToAdd, permissionsToAdd, lastname, firstname, cnp, phone);
             log.info(String.format("User [%1s] was created with success by user [%2s]", usernameToAdd, user.getUsername()));
             
             return CWMDRequestResponse.createResponse("OK", HttpStatus.OK);
@@ -223,14 +227,18 @@ public class AuthRestController
         String usernameToUpdate = reqUser.getUsername();
         String password = reqUser.getPassword();
         long permissions = reqUser.getPermissions();
-        
+        String lastname = reqUser.getLastname();
+        String firstname = reqUser.getFirstname();
+        String cnp = reqUser.getCnp();
+        String phone = reqUser.getPhone();
+
         try
         {
             User user = sm.GetLoggedInUser(token, (int) UserPerm.PERM_UPDATE_USER);
             log.info(String.format("User [%1s] has enough permissions to update user [%2s]", user.getUsername(), usernameToUpdate));
     
-            ctrlUser.UpdateUser(usernameToUpdate, password, permissions);
-            sm.UpdateInfo(new User(usernameToUpdate, password, permissions));
+            ctrlUser.UpdateUser(usernameToUpdate, password, permissions, lastname, firstname, cnp, phone);
+            sm.UpdateInfo(new User(usernameToUpdate, password, permissions, lastname, firstname, cnp, phone));
             log.info(String.format("User [%1s] was updated with success", usernameToUpdate));
     
             

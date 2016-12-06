@@ -7,10 +7,17 @@ import java.util.Date;
  */
 public class User
 {
+    // form database
     private int         id;
-    private String      username;
+    private String      username; // an email
     private String      password;
     private long        permissions;
+    private String      lastname;
+    private String      firstname;
+    private String      cnp;   // 13 chars
+    private String      phone; // 10 chars
+
+    // application
     private String      token;
     private long        loggedInTime;
     
@@ -26,6 +33,19 @@ public class User
         
     public User() {
 
+    }
+
+    public User(String username, String password, long permissions, String lastname, String firstname, String cnp, String phone) {
+        this.username = username;
+        this.password = password;
+        this.permissions = permissions;
+        this.lastname = lastname;
+        this.firstname = firstname;
+        this.cnp = cnp;
+        this.phone = phone;
+
+        token               = null;
+        loggedInTime        = 0;
     }
 
     public String getUsername()
@@ -84,5 +104,37 @@ public class User
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public String getLastname() {
+        return lastname;
+    }
+
+    public void setLastname(String lastname) {
+        this.lastname = lastname;
+    }
+
+    public String getFirstname() {
+        return firstname;
+    }
+
+    public void setFirstname(String firstname) {
+        this.firstname = firstname;
+    }
+
+    public String getCnp() {
+        return cnp;
+    }
+
+    public void setCnp(String cnp) {
+        this.cnp = cnp;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 }

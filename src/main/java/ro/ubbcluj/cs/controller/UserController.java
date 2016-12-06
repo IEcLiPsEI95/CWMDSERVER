@@ -16,138 +16,181 @@ import java.util.List;
  */
 
 @Component
-public class UserController
-{
+public class UserController {
     private static Logger log = LogManager.getLogger(UserController.class);
-    
+
     @Autowired
     private UserRepository repoUser;
 
-    public UserController()
-    {
+    public UserController() {
         log.info("UserController()");
     }
-    
-    public User GetUserByUsernameAndPassword(String username, String password) throws RequestException
-    {
-        try
-        {
+
+    public User GetUserByUsernameAndPassword(String username, String password) throws RequestException {
+        try {
             User resp = repoUser.getUserByUsernameAndPassword(username, password);
-            if (null == resp)
-            {
+            if (null == resp) {
                 throw new RequestException("Invalid username or password", HttpStatus.NOT_FOUND);
             }
-            
+
             return resp;
-        } 
-        catch (UserRepository.PasswordIsNull ignored)
-        {
+        } catch (UserRepository.PasswordIsNull ignored) {
             throw new RequestException("Password is empty", HttpStatus.BAD_REQUEST);
-        } 
-        catch (UserRepository.UsernameIsNull ignored)
-        {
+        } catch (UserRepository.UsernameIsNull ignored) {
             throw new RequestException("Username is empty", HttpStatus.BAD_REQUEST);
         }
     }
-    
-    public User GetUserByUsername(String username) throws RequestException
-    {
-        try
-        {
+
+    public User GetUserByUsername(String username) throws RequestException {
+        try {
             return repoUser.getUserByUsername(username);
-        } 
-        catch (UserRepository.UsersUsernameIsNull ignore)
-        {
+        } catch (UserRepository.UsersUsernameIsNull ignore) {
             throw new RequestException("Username is empty", HttpStatus.BAD_REQUEST);
         }
     }
-    
-    public void AddUser(String username, String password, long permissions) throws RequestException
-    {
-        if (null == username || username.isEmpty())
-        {
+
+    public void AddUser(String username, String password, long permissions, String lastname, String firstname, String cnp, String phone) throws RequestException {
+        if (null == username || username.isEmpty()) {
             throw new RequestException("Username was not provided.", HttpStatus.BAD_REQUEST);
         }
-    
-        if (null == password || password.isEmpty())
-        {
+
+        if (null == password || password.isEmpty()) {
             throw new RequestException("Password was not provided.", HttpStatus.BAD_REQUEST);
         }
-        
-        try
-        {
-            User user = new User(username, password, permissions);
+
+        if (null == lastname || lastname.isEmpty()) {
+            throw new RequestException("Lastname was not provided.", HttpStatus.BAD_REQUEST);
+        }
+
+        if (null == firstname || firstname.isEmpty()) {
+            throw new RequestException("Firstname was not provided.", HttpStatus.BAD_REQUEST);
+        }
+
+        if (null == cnp || cnp.isEmpty()) {
+            throw new RequestException("Cnp was not provided.", HttpStatus.BAD_REQUEST);
+        }
+
+        if (cnp.length() != 13) {
+            throw new RequestException("Cnp invalid.", HttpStatus.BAD_REQUEST);
+        }
+
+        if (null == phone || phone.isEmpty()) {
+            throw new RequestException("Phone was not provided.", HttpStatus.BAD_REQUEST);
+        }
+
+        if (phone.length() != 10) {
+            throw new RequestException("Phone invalid.", HttpStatus.BAD_REQUEST);
+        }
+
+        try {
+            User user = new User(username, password, permissions, lastname, firstname, cnp, phone);
             repoUser.insert(user);
             log.info("User: " + username + " was added with success");
-        }
-        catch (Throwable e)
-        {
+        } catch (Throwable e) {
             log.error("Failed to add user: " + username);
             log.error(e.getMessage());
-            throw  new RequestException("Insert failed. WHY???", HttpStatus.BAD_REQUEST);
+            throw new RequestException("Insert failed. WHY???", HttpStatus.BAD_REQUEST);
         }
     }
-    
-    public boolean DeleteUser(String username)
-    {
-        try
-        {
+
+    public boolean DeleteUser(String username) {
+        try {
             repoUser.delete(username);
-        } 
-        catch (Throwable ex)
-        {
+        } catch (Throwable ex) {
             log.error("Failed to delete user: " + username);
             log.error(ex.toString());
             return false;
         }
-        
+
         return true;
     }
-    
-    public void UpdateUser(String username, String password, long permissions) throws RequestException
-    {
-        if (null == username || username.isEmpty())
-        {
+
+    public void UpdateUser(String username, String password, long permissions, String lastname, String firstname, String cnp, String phone) throws RequestException {
+        if (null == username || username.isEmpty()) {
             throw new RequestException("Username was not provided.", HttpStatus.BAD_REQUEST);
         }
-    
-        if (null == password || password.isEmpty())
-        {
+
+        if (null == password || password.isEmpty()) {
             throw new RequestException("Password was not provided.", HttpStatus.BAD_REQUEST);
         }
-    
-        try
-        {
-            User user = new User(username, password, permissions);
+
+        if (null == lastname || lastname.isEmpty()) {
+            throw new RequestException("Lastname was not provided.", HttpStatus.BAD_REQUEST);
+        }
+
+        if (null == firstname || firstname.isEmpty()) {
+            throw new RequestException("Firstname was not provided.", HttpStatus.BAD_REQUEST);
+        }
+
+        if (null == cnp || cnp.isEmpty()) {
+            throw new RequestException("Cnp was not provided.", HttpStatus.BAD_REQUEST);
+        }
+
+        if (cnp.length() != 13) {
+            throw new RequestException("Cnp invalid.", HttpStatus.BAD_REQUEST);
+        }
+
+        if (null == phone || phone.isEmpty()) {
+            throw new RequestException("Phone was not provided.", HttpStatus.BAD_REQUEST);
+        }
+
+        if (phone.length() != 10) {
+            throw new RequestException("Phone invalid.", HttpStatus.BAD_REQUEST);
+        }
+
+        try {
+            User user = new User(username, password, permissions, lastname, firstname, cnp, phone);
             repoUser.updateUser(username, user);
             log.info("User: " + username + " was updated with success");
-        }
-        catch (Throwable e)
-        {
+        } catch (UserRepository.UsernameIsNull usernameIsNull) {
             log.error("Failed to update user: " + username);
-            log.error(e.getMessage());
-            throw  new RequestException("Update failed. WHY???", HttpStatus.BAD_REQUEST);
+            log.error(usernameIsNull.getMessage());
+            throw new RequestException("Update failed. UsernameIsNull", HttpStatus.BAD_REQUEST);
+        } catch (UserRepository.UsersUsernameIsNull usersUsernameIsNull) {
+            log.error("Failed to update user: " + username);
+            log.error(usersUsernameIsNull.getMessage());
+            throw new RequestException("Update failed. UsersUsernameIsNull", HttpStatus.BAD_REQUEST);
+        } catch (UserRepository.UserNotFound userNotFound) {
+            log.error("Failed to update user: " + username);
+            log.error(userNotFound.getMessage());
+            throw new RequestException("Update failed. UserNotFound", HttpStatus.BAD_REQUEST);
+        } catch (UserRepository.PasswordIsNull passwordIsNull) {
+            log.error("Failed to update user: " + username);
+            log.error(passwordIsNull.getMessage());
+            throw new RequestException("Update failed. PasswordIsNull", HttpStatus.BAD_REQUEST);
+        } catch (UserRepository.PhoneIsNull phoneIsNull) {
+            log.error("Failed to update user: " + username);
+            log.error(phoneIsNull.getMessage());
+            throw new RequestException("Update failed. PhoneIsNull", HttpStatus.BAD_REQUEST);
+        } catch (UserRepository.LastnameIsNull lastnameIsNull) {
+            log.error("Failed to update user: " + username);
+            log.error(lastnameIsNull.getMessage());
+            throw new RequestException("Update failed. LastnameIsNull", HttpStatus.BAD_REQUEST);
+        } catch (UserRepository.FirstnameIsNull firstnameIsNull) {
+            log.error("Failed to update user: " + username);
+            log.error(firstnameIsNull.getMessage());
+            throw new RequestException("Update failed. FirstnameIsNull", HttpStatus.BAD_REQUEST);
+        } catch (UserRepository.CnpIsNullOrInvalid cnpIsNullOrInvalid) {
+            log.error("Failed to update user: " + username);
+            log.error(cnpIsNullOrInvalid.getMessage());
+            throw new RequestException("Update failed. CnpIsNullOrInvalid", HttpStatus.BAD_REQUEST);
         }
     }
-    
-    public List<User> GetAllUsers()
-    {
+
+    public List<User> GetAllUsers() {
 //        repoUser.getAllUsers();
         return null;
     }
-    
-    public static class RequestException extends Throwable
-    {
+
+    public static class RequestException extends Throwable {
         private HttpStatus status;
-    
-        public RequestException(String message, HttpStatus status)
-        {
+
+        public RequestException(String message, HttpStatus status) {
             super(message);
             this.status = status;
         }
-    
-        public HttpStatus getStatus()
-        {
+
+        public HttpStatus getStatus() {
             return status;
         }
     }

@@ -35,7 +35,7 @@ public class UserRepository {
      * @throws UserIsNull          user-ul este null
      * @throws UsersUsernameIsNull username-ul este null
      */
-    public void insert(User user) throws UsersPasswordIsNull, UserIsNull, UsersUsernameIsNull {
+    public void insert(User user) throws UsersPasswordIsNull, UserIsNull, UsersUsernameIsNull, UsersFirstnameIsNull, UsersCnpIsInvalid, UsersPhoneIsInvalid, UsersLastnameIsNull {
         try {
             user.setId(insertAndGetId(user));
         } catch (NullPointerException e) {
@@ -84,7 +84,7 @@ public class UserRepository {
         try {
 
             List<User> users = jdbcTemplate.query(
-                    "SELECT id, username, password, permissions FROM users WHERE username = ? AND password = ?",
+                    "SELECT id, username, password, permissions, lastname, firstname, cnp, phone FROM users WHERE username = ? AND password = ?",
                     new Object[]{username, password}, new UserRowMapper());
             return users.size() == 0 ? null : users.get(0);
         } catch (Exception e) {
@@ -172,8 +172,19 @@ public class UserRepository {
         if (userId <= 0) throw new InvalidUserId();
 
         try {
-            List<User> users = jdbcTemplate.query("SELECT id, username, password, permissions FROM users WHERE id = ?", new Object[]{userId}, new UserRowMapper());
+            List<User> users = jdbcTemplate.query("SELECT id, username,password,permissions,lastname,firstname,cnp,phone FROM users WHERE id = ?",
+                    new Object[]{userId}, new UserRowMapper());
             return users.size() == 0 ? null : users.get(0);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw e;
+        }
+    }
+
+    public List<User> getAllUsers(){
+        try {
+            return jdbcTemplate.query("SELECT id, username,password,permissions,lastname,firstname,cnp,phone FROM users",
+                    new UserRowMapper());
         } catch (Exception e) {
             log.error(e.getMessage());
             throw e;
@@ -184,7 +195,7 @@ public class UserRepository {
         if (username == null) throw new UsersUsernameIsNull();
         
         try {
-            List<User> users = jdbcTemplate.query("SELECT id, username, password, permissions FROM users WHERE username = ?", 
+            List<User> users = jdbcTemplate.query("SELECT id, username,password,permissions,lastname,firstname,cnp,phone FROM users WHERE username = ?",
                     new Object[]{username}, new UserRowMapper());
             return users.size() == 0 ? null : users.get(0);
         } catch (Exception e) {
@@ -193,23 +204,31 @@ public class UserRepository {
         }
     }
     
-    private int insertAndGetId(User user) throws UserIsNull, UsersPasswordIsNull, UsersUsernameIsNull {
+    private int insertAndGetId(User user) throws UserIsNull, UsersPasswordIsNull, UsersUsernameIsNull, UsersLastnameIsNull, UsersFirstnameIsNull, UsersCnpIsInvalid, UsersPhoneIsInvalid {
         if (user == null) throw new UserIsNull();
         if (user.getPassword() == null) throw new UsersPasswordIsNull();
         if (user.getUsername() == null) throw new UsersUsernameIsNull();
+        if (user.getLastname() == null) throw new UsersLastnameIsNull();
+        if (user.getFirstname() == null) throw new UsersFirstnameIsNull();
+        if (user.getCnp() == null || user.getCnp().length() != 13) throw new UsersCnpIsInvalid();
+        if (user.getPhone() == null || user.getPhone().length() != 10) throw new UsersPhoneIsInvalid();
 
         try {
             KeyHolder keyHolder = new GeneratedKeyHolder();
             jdbcTemplate.update(connection -> {
                 PreparedStatement ps;
                 ps = connection.prepareStatement(
-                        "INSERT INTO users (username, password, permissions) VALUES (?,?,?)", 
+                        "INSERT INTO users (username,password,permissions,lastname,firstname,cnp,phone) VALUES (?,?,?,?,?,?,?)",
                         Statement.RETURN_GENERATED_KEYS
                 );
                 
                 ps.setString(1, user.getUsername());
                 ps.setString(2, user.getPassword());
                 ps.setLong(3, user.getPermissions());
+                ps.setString(4, user.getLastname());
+                ps.setString(5,user.getFirstname());
+                ps.setString(6, user.getCnp());
+                ps.setString(7, user.getPhone());
                 return ps;
             
             }, keyHolder);
@@ -220,12 +239,92 @@ public class UserRepository {
         }
     }
     
-    public void updateUser(String username, User user) throws UsernameIsNull, UsersUsernameIsNull, UserNotFound, PasswordIsNull
-    {
+    public void updateUser(String username, User user) throws UsernameIsNull, UsersUsernameIsNull, UserNotFound, PasswordIsNull, PhoneIsNull, LastnameIsNull, FirstnameIsNull, CnpIsNullOrInvalid {
         updatePassword(username, user.getPassword());
         updatePermissions(username, user.getPermissions());
+        updateLastname(username, user.getLastname());
+        updateFirstname(username, user.getFirstname());
+        updateCnp(username, user.getCnp());
+        updatePhone(username, user.getPhone());
     }
-    
+
+    private void updatePhone(String username, String phone) throws UsersUsernameIsNull, UsernameIsNull, UserNotFound, PhoneIsNull {
+        if (username == null) throw new  UsernameIsNull();
+        if (phone == null) throw new PhoneIsNull();
+        if (getUserByUsername(username) == null) throw new UserNotFound();
+
+        try {
+            jdbcTemplate.update(connection -> {
+                PreparedStatement ps;
+                ps = connection.prepareStatement("UPDATE users SET phone = ? WHERE username = ?");
+                ps.setString(1, phone);
+                ps.setString(2, username);
+                return ps;
+            });
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw e;
+        }
+    }
+
+    private void updateCnp(String username, String cnp) throws UsernameIsNull, CnpIsNullOrInvalid, UserNotFound, UsersUsernameIsNull {
+        if (username == null) throw new  UsernameIsNull();
+        if (cnp == null || cnp.length() != 13) throw new CnpIsNullOrInvalid();
+        if (getUserByUsername(username) == null) throw new UserNotFound();
+
+        try {
+            jdbcTemplate.update(connection -> {
+                PreparedStatement ps;
+                ps = connection.prepareStatement("UPDATE users SET cnp = ? WHERE username = ?");
+                ps.setString(1, cnp);
+                ps.setString(2, username);
+                return ps;
+            });
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw e;
+        }
+    }
+
+    private void updateFirstname(String username, String firstname) throws UsernameIsNull, UsersUsernameIsNull, UserNotFound, FirstnameIsNull {
+        if (username == null) throw new  UsernameIsNull();
+        if (firstname == null) throw new FirstnameIsNull();
+        if (getUserByUsername(username) == null) throw new UserNotFound();
+
+        try {
+            jdbcTemplate.update(connection -> {
+                PreparedStatement ps;
+                ps = connection.prepareStatement("UPDATE users SET firstname = ? WHERE username = ?");
+                ps.setString(1, firstname);
+                ps.setString(2, username);
+                return ps;
+            });
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw e;
+        }
+    }
+
+    private void updateLastname(String username, String lastname) throws UsernameIsNull, LastnameIsNull, UsersUsernameIsNull, UserNotFound {
+        if (username == null) throw new  UsernameIsNull();
+        if (lastname == null) throw new LastnameIsNull();
+        if (getUserByUsername(username) == null) throw new UserNotFound();
+
+        try {
+            jdbcTemplate.update(connection -> {
+                PreparedStatement ps;
+                ps = connection.prepareStatement("UPDATE users SET lastname = ? WHERE username = ?");
+                ps.setString(1, lastname);
+                ps.setString(2, username);
+                return ps;
+            });
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw e;
+        }
+    }
+
+
     public class InvalidUserId extends Throwable {
     }
 
@@ -245,5 +344,29 @@ public class UserRepository {
     }
 
     public class PasswordIsNull extends Throwable {
+    }
+
+    private class UsersLastnameIsNull extends Throwable {
+    }
+
+    private class UsersFirstnameIsNull extends Throwable {
+    }
+
+    private class UsersCnpIsInvalid extends Throwable {
+    }
+
+    private class UsersPhoneIsInvalid extends Throwable {
+    }
+
+    public class PhoneIsNull extends Throwable {
+    }
+
+    public class CnpIsNullOrInvalid extends Throwable {
+    }
+
+    public class FirstnameIsNull extends Throwable {
+    }
+
+    public class LastnameIsNull extends Throwable {
     }
 }

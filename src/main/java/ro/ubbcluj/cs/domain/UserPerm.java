@@ -14,7 +14,6 @@ public class UserPerm
     public static final long PERM_UPDATE_USER       = 0x00000004;
     public static final long PERM_DELETE_USER       = 0x00000018; // permission to delete users (this includes permission to logout other users)
     public static final long PERM_LOGOUT_USER       = 0x00000010; // permission to logout OTHER users
-    
-    
+
     public static final long PERM_ALL               = -1; // asta-i dumnezo
 }
