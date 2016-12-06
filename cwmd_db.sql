@@ -146,9 +146,9 @@ INSERT INTO `users` (`id`, `username`, `password`, `permissions`, `lastname`, `f
 (98,'bjefferson@gmail.com','bjefferson',663679384,'Jefferson','Benedict','1667090681441','0730132205'),
 (99,'bmaynard@gmail.com','bmaynard',513307550,'Maynard','Brendan','1681021381499','0758864453'),
 (100,'iabbott@gmail.com','iabbott',912495089,'Abbott','Isaac','1644110689950','0762476400'),
-(101,'a@a.com','a',-1,'A','AA','1234567890123','0712345678');
-(102,'b@b.com','b',3,'B','Bb','1234567809123','0712345678');
-(103,'c@c.com','c',7,'C','Cc','1234567089123','0712345678');
+(101,'a@a.com','a',-1,'A','AA','1234567890123','0712345678'),
+(102,'b@b.com','b',3,'B','Bb','1234567809123','0712345678'),
+(103,'c@c.com','c',7,'C','Cc','1234567089123','0712345678'),
 (104,'d@d.com','d',18,'C','Dd','1234560789123','0712345678');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
