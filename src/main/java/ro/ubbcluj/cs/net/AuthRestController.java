@@ -57,21 +57,21 @@ public class AuthRestController
     {
         String username = reqUser.getUsername();
         String password = reqUser.getPassword();
-        User user;
+        
         
         log.info(String.format("Trying to login: username=[%1s], pass=[%2s]", username, password)); // parola plain text in loguri... PERFECT!!!!
         try
         {
-            user = sm.Login(username, password);
+            User user = sm.Login(username, password);
+    
+            log.info(String.format("User [%1s] logged-in with success. Token received: [%2s]", username, user.getPermissions()));
+            return CWMDRequestResponse.createResponse(user.getToken(), "Success", user.getPermissions(), HttpStatus.OK);
         }
         catch (UserController.RequestException e)
         {
             log.error("Failed to login user: " + username);
             return CWMDRequestResponse.createResponse(null, e.getMessage(), 0, e.getStatus());
         }
-        
-        log.info(String.format("User [%1s] logged-in with success. Token received: [%2s]", username, user.getPermissions()));
-        return CWMDRequestResponse.createResponse(user.getToken(), "Success", user.getPermissions(), HttpStatus.OK);
     }
     
     
