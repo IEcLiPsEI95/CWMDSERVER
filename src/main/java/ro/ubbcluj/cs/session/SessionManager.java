@@ -127,8 +127,9 @@ public class SessionManager
     {
         if (token.startsWith(tokenPrefix))
         {
-            token = token.substring(0, tokenPrefix.length());
+            token = token.substring(tokenPrefix.length(), token.length());
         }
+        log.info("Trying to get username from token: " + token);
         
         User user;
         boolean result;

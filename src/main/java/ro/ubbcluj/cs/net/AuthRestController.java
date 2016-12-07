@@ -37,8 +37,15 @@ public class AuthRestController
     
     AuthRestController()
     {
-        log.info("AuthRestController()");
+        log.info("AuthRestController");
     }
+//    
+//    @RequestMapping(value = "favicon.ico", method = RequestMethod.GET)
+//    public @ResponseBody String Test(@PathVariable int id)
+//    {
+//        log.info("s-o conectat: " + id);
+//        return Integer.toString(id * 2);
+//    }
     
     
     // asta ii doar de test... sa vedem ca merge conexiunea
@@ -64,7 +71,7 @@ public class AuthRestController
         {
             User user = sm.Login(username, password);
     
-            log.info(String.format("User [%1s] logged-in with success. Token received: [%2s]", username, user.getPermissions()));
+            log.info(String.format("User [%1s] logged-in with success. User permissions: [%2s]", username, user.getPermissions()));
             return CWMDRequestResponse.createResponse(user.getToken(), "Success", user.getPermissions(), HttpStatus.OK);
         }
         catch (UserController.RequestException e)
@@ -226,11 +233,11 @@ public class AuthRestController
         log.info(String.format("Trying to update: username=[%1s]", reqUser.getUsername()));
         String usernameToUpdate = reqUser.getUsername();
         String password = reqUser.getPassword();
-        long permissions = reqUser.getPermissions();
         String lastname = reqUser.getLastname();
         String firstname = reqUser.getFirstname();
         String cnp = reqUser.getCnp();
         String phone = reqUser.getPhone();
+        long permissions = reqUser.getPermissions();
 
         try
         {
@@ -253,7 +260,7 @@ public class AuthRestController
     }
     
     
-    @RequestMapping(value = "getallusers", method = RequestMethod.POST)
+    @RequestMapping(value = "getallusers", method = RequestMethod.GET)
     public ResponseEntity<?> GetAllUser(
             @RequestHeader(value = TOKEN_HEADER, required = true) String token
     )
@@ -274,13 +281,12 @@ public class AuthRestController
         }
         catch (UserController.RequestException e)
         {
-//            log.error(String.format("User with token [%1s] does not have enough permissions to get user [%2s]", token, usernameToGet));
             return CWMDRequestResponse.createResponse(e.getMessage(), e.getStatus());
         }
         catch (JsonProcessingException e)
         {
             log.error(String.format(e.getMessage()));
-            return CWMDRequestResponse.createResponse(String.format(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+            return CWMDRequestResponse.createResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

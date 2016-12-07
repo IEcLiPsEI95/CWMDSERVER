@@ -236,10 +236,23 @@ public class UserController
         }
     }
     
-    public List<User> GetAllUsers()
+    public List<User> GetAllUsers() throws RequestException
     {
-//        repoUser.getAllUsers();
-        return null;
+        try
+        {
+            List<User> list = repoUser.getAllUsers();
+            if (null == list)
+            {
+                log.error("There are no users in DataBase.");
+                throw new RequestException("There are no users. WTF??", HttpStatus.NOT_FOUND);
+            }
+            
+            return list;
+        }
+        catch (Exception ex)
+        {
+            throw new RequestException(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
     
     public static class RequestException extends Throwable
