@@ -82,14 +82,14 @@ public class CWMDRequestResponse
         return createResponse(this.token, this.message, this.permissions, this.status);
     }
     
-    public static ResponseEntity<?> createResponse(String message, HttpStatus status)
+    public static ResponseEntity<?> createResponse(Object message, HttpStatus status)
     {
         return createResponse(null, message, 0, status);
     }
     
-    public static ResponseEntity<?> createResponse(String token, String message, long permissions, HttpStatus status)
+    public static ResponseEntity<?> createResponse(String token, Object message, long permissions, HttpStatus status)
     {
-        HashMap<String, String> resp = new HashMap<>();
+        HashMap<String, Object> resp = new HashMap<>();
         
         resp.put("token",       token);
         resp.put("message",     message);
@@ -98,8 +98,7 @@ public class CWMDRequestResponse
         
         Gson g = new GsonBuilder().disableHtmlEscaping().create();
         String jsonResp = g.toJson(resp);
-    
-        System.out.println("Response json: " + jsonResp);
+
         return new ResponseEntity<>(jsonResp, HttpStatus.OK);
     }
 }
