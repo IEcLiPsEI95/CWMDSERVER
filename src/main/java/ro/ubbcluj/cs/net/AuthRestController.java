@@ -274,19 +274,12 @@ public class AuthRestController
             
             List<User> userResp = ctrlUser.GetAllUsers();
             log.info(String.format("Found [%1d] users", userResp.size()));
-            
-            String response = mapper.writeValueAsString(userResp);
-            log.info(response);
-            return CWMDRequestResponse.createResponse(response, HttpStatus.OK);
+
+            return CWMDRequestResponse.createResponse(userResp, HttpStatus.OK);
         }
         catch (UserController.RequestException e)
         {
             return CWMDRequestResponse.createResponse(e.getMessage(), e.getStatus());
-        }
-        catch (JsonProcessingException e)
-        {
-            log.error(String.format(e.getMessage()));
-            return CWMDRequestResponse.createResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }
