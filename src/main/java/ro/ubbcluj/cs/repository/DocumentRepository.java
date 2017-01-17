@@ -12,7 +12,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class DocumentRepository {
     
-    private static Logger log = LogManager.getLogger(UserRepository.class);
+    private static Logger log = LogManager.getLogger(DocumentRepository.class);
     
     @Autowired
     JdbcTemplate jdbcTemplate;

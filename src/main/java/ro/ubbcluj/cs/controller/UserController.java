@@ -138,26 +138,31 @@ public class UserController
         return true;
     }
     
-    public void UpdateUser(String username, String password, long permissions, String lastname, String firstname, String cnp, String phone) throws RequestException
+    public void UpdateUser(String username, String password, long permissions, String lastName, String firstName, String cnp, String phone, User oldUser) throws RequestException
     {
+        String passToAdd;
         if (null == username || username.isEmpty())
         {
             throw new RequestException("Username was not provided.", HttpStatus.BAD_REQUEST);
         }
-        
+
         if (null == password || password.isEmpty())
         {
-            throw new RequestException("Password was not provided.", HttpStatus.BAD_REQUEST);
+            passToAdd = oldUser.getPassword();
+        }
+        else
+        {
+            passToAdd = password;
         }
         
-        if (null == lastname || lastname.isEmpty())
+        if (null == lastName || lastName.isEmpty())
         {
-            throw new RequestException("Lastname was not provided.", HttpStatus.BAD_REQUEST);
+            throw new RequestException("Last Name was not provided.", HttpStatus.BAD_REQUEST);
         }
         
-        if (null == firstname || firstname.isEmpty())
+        if (null == firstName || firstName.isEmpty())
         {
-            throw new RequestException("Firstname was not provided.", HttpStatus.BAD_REQUEST);
+            throw new RequestException("First Name was not provided.", HttpStatus.BAD_REQUEST);
         }
         
         if (null == cnp || cnp.isEmpty())
@@ -182,7 +187,7 @@ public class UserController
         
         try
         {
-            User user = new User(username, password, permissions, lastname, firstname, cnp, phone);
+            User user = new User(username, passToAdd, permissions, lastName, firstName, cnp, phone);
             repoUser.updateUser(username, user);
             log.info("User: " + username + " was updated with success");
         }
@@ -244,7 +249,7 @@ public class UserController
             if (null == list)
             {
                 log.error("There are no users in DataBase.");
-                throw new RequestException("There are no users. WTF??", HttpStatus.NOT_FOUND);
+                throw new RequestException("There are no users.", HttpStatus.NOT_FOUND);
             }
             
             return list;

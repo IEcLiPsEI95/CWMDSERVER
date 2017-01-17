@@ -83,7 +83,7 @@ public class UserRepository {
         try {
 
             List<User> users = jdbcTemplate.query(
-                    "SELECT id, username, password, permissions, lastname, firstname, cnp, phone FROM users WHERE username = ? AND password = ?",
+                    "SELECT id, username, permissions, lastname, firstname, cnp, phone FROM users WHERE username = ? AND password = ?",
                     new Object[]{username, password}, new UserRowMapper());
             return users.size() == 0 ? null : users.get(0);
         } catch (Exception e) {
@@ -171,7 +171,7 @@ public class UserRepository {
         if (userId <= 0) throw new InvalidUserId();
 
         try {
-            List<User> users = jdbcTemplate.query("SELECT id, username,password,permissions,lastname,firstname,cnp,phone FROM users WHERE id = ?",
+            List<User> users = jdbcTemplate.query("SELECT id, username,permissions,lastname,firstname,cnp,phone FROM users WHERE id = ?",
                     new Object[]{userId}, new UserRowMapper());
             return users.size() == 0 ? null : users.get(0);
         } catch (Exception e) {
@@ -182,7 +182,7 @@ public class UserRepository {
 
     public List<User> getAllUsers(){
         try {
-            return jdbcTemplate.query("SELECT id, username,password,permissions,lastname,firstname,cnp,phone FROM users",
+            return jdbcTemplate.query("SELECT id, username,permissions,lastname,firstname,cnp,phone FROM users",
                     new UserRowMapper());
         } catch (Exception e) {
             log.error(e.getMessage());
@@ -194,7 +194,7 @@ public class UserRepository {
         if (username == null) throw new UsersUsernameIsNull();
         
         try {
-            List<User> users = jdbcTemplate.query("SELECT id, username,password,permissions,lastname,firstname,cnp,phone FROM users WHERE username = ?",
+            List<User> users = jdbcTemplate.query("SELECT id, username,permissions,lastname,firstname,cnp,phone FROM users WHERE username = ?",
                     new Object[]{username}, new UserRowMapper());
             return users.size() == 0 ? null : users.get(0);
         } catch (Exception e) {
@@ -217,7 +217,7 @@ public class UserRepository {
             jdbcTemplate.update(connection -> {
                 PreparedStatement ps;
                 ps = connection.prepareStatement(
-                        "INSERT INTO users (username,password,permissions,lastname,firstname,cnp,phone) VALUES (?,?,?,?,?,?,?)",
+                        "INSERT INTO users (username,permissions,lastname,firstname,cnp,phone) VALUES (?,?,?,?,?,?,?)",
                         Statement.RETURN_GENERATED_KEYS
                 );
                 
@@ -239,7 +239,11 @@ public class UserRepository {
     }
     
     public void updateUser(String username, User user) throws UsernameIsNull, UsersUsernameIsNull, UserNotFound, PasswordIsNull, PhoneIsNull, LastnameIsNull, FirstnameIsNull, CnpIsNullOrInvalid {
-        updatePassword(username, user.getPassword());
+        
+        if (null != user.getPassword())
+        {
+            updatePassword(username, user.getPassword());
+        }
         updatePermissions(username, user.getPermissions());
         updateLastname(username, user.getLastName());
         updateFirstname(username, user.getFirstName());

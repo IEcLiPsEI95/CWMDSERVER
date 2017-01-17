@@ -188,7 +188,7 @@ public class SessionManager
             return;
         }
         
-        existingUser.setPassword(newUser.getPassword());
+//        existingUser.setPassword(newUser.getPassword());
         existingUser.setPermissions(newUser.getPermissions());
         listMutex.unlock();
         
