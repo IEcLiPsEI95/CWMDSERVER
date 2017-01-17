@@ -19,6 +19,7 @@ import java.util.List;
 public class UserController
 {
     private static Logger log = LogManager.getLogger(UserController.class);
+    private static long lastUpdateTime = 0;
     
     @Autowired
     private UserRepository repoUser;
@@ -26,6 +27,11 @@ public class UserController
     public UserController()
     {
         log.info("UserController()");
+    }
+    
+    public long getLastUpdateTime()
+    {
+        return lastUpdateTime;
     }
     
     public User GetUserByUsernameAndPassword(String username, String password) throws RequestException
@@ -113,6 +119,7 @@ public class UserController
             User user = new User(username, password, permissions, lastname, firstname, cnp, phone);
             repoUser.insert(user);
             log.info("User: " + username + " was added with success");
+            lastUpdateTime = System.currentTimeMillis();
         }
         catch (Throwable e)
         {
@@ -127,6 +134,7 @@ public class UserController
         try
         {
             repoUser.delete(username);
+            lastUpdateTime = System.currentTimeMillis();
         }
         catch (Throwable ex)
         {
@@ -190,6 +198,7 @@ public class UserController
             User user = new User(username, passToAdd, permissions, lastName, firstName, cnp, phone);
             repoUser.updateUser(username, user);
             log.info("User: " + username + " was updated with success");
+            lastUpdateTime = System.currentTimeMillis();
         }
         catch (UserRepository.UsernameIsNull usernameIsNull)
         {

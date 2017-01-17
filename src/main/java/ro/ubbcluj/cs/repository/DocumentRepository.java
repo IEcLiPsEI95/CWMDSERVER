@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+import ro.ubbcluj.cs.domain.User;
 
 /**
  * Created by hzugr on 11/15/2016.
@@ -16,5 +17,10 @@ public class DocumentRepository {
     
     @Autowired
     JdbcTemplate jdbcTemplate;
-
+    
+    public String getSignatures(User user)
+    {
+        //TODO returning the signatures
+        return "1";
+    }
 }

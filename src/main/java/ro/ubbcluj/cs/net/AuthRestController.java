@@ -14,6 +14,7 @@ import ro.ubbcluj.cs.domain.User;
 import ro.ubbcluj.cs.domain.UserPerm;
 import ro.ubbcluj.cs.session.SessionManager;
 
+import javax.websocket.server.PathParam;
 import java.util.List;
 
 /**
@@ -117,6 +118,35 @@ public class AuthRestController
         catch (UserController.RequestException e)
         {
             log.error(e.getMessage());
+            return CWMDRequestResponse.createResponse(e.getMessage(), e.getStatus());
+        }
+    }
+    
+    // get user by username
+    @RequestMapping(value = "check", method = RequestMethod.GET)
+    public ResponseEntity<?> CheckList(
+            @RequestHeader(value = TOKEN_HEADER, required = true) String token,
+            @PathParam("timestamp") long timestamp
+    )
+    {
+        try
+        {
+            User user = sm.GetLoggedInUser(token, UserPerm.PERM_GET_USER);
+//            log.info(String.format("User [%1s] is trying to get user [%1s}", user.getUsername(), usernameToGet));
+            
+            if (timestamp > ctrlUser.getLastUpdateTime())
+            {
+                return CWMDRequestResponse.createResponse("DA", HttpStatus.OK);    
+            }
+            else
+            {
+                return CWMDRequestResponse.createResponse("NU", HttpStatus.I_AM_A_TEAPOT);
+            }
+            
+        }
+        catch (UserController.RequestException e)
+        {
+//            log.error(String.format("User with token [%1s] does not have enough permissions to get user [%2s]", token, usernameToGet));
             return CWMDRequestResponse.createResponse(e.getMessage(), e.getStatus());
         }
     }
