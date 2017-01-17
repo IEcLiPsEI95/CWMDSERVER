@@ -7,7 +7,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
-import ro.ubbcluj.cs.controller.UserController;
 import ro.ubbcluj.cs.domain.User;
 
 import java.sql.PreparedStatement;
@@ -208,8 +207,8 @@ public class UserRepository {
         if (user == null) throw new UserIsNull();
         if (user.getPassword() == null) throw new UsersPasswordIsNull();
         if (user.getUsername() == null) throw new UsersUsernameIsNull();
-        if (user.getLastname() == null) throw new UsersLastnameIsNull();
-        if (user.getFirstname() == null) throw new UsersFirstnameIsNull();
+        if (user.getLastName() == null) throw new UsersLastnameIsNull();
+        if (user.getFirstName() == null) throw new UsersFirstnameIsNull();
         if (user.getCnp() == null || user.getCnp().length() != 13) throw new UsersCnpIsInvalid();
         if (user.getPhone() == null || user.getPhone().length() != 10) throw new UsersPhoneIsInvalid();
 
@@ -225,8 +224,8 @@ public class UserRepository {
                 ps.setString(1, user.getUsername());
                 ps.setString(2, user.getPassword());
                 ps.setLong(3, user.getPermissions());
-                ps.setString(4, user.getLastname());
-                ps.setString(5,user.getFirstname());
+                ps.setString(4, user.getLastName());
+                ps.setString(5,user.getFirstName());
                 ps.setString(6, user.getCnp());
                 ps.setString(7, user.getPhone());
                 return ps;
@@ -242,8 +241,8 @@ public class UserRepository {
     public void updateUser(String username, User user) throws UsernameIsNull, UsersUsernameIsNull, UserNotFound, PasswordIsNull, PhoneIsNull, LastnameIsNull, FirstnameIsNull, CnpIsNullOrInvalid {
         updatePassword(username, user.getPassword());
         updatePermissions(username, user.getPermissions());
-        updateLastname(username, user.getLastname());
-        updateFirstname(username, user.getFirstname());
+        updateLastname(username, user.getLastName());
+        updateFirstname(username, user.getFirstName());
         updateCnp(username, user.getCnp());
         updatePhone(username, user.getPhone());
     }

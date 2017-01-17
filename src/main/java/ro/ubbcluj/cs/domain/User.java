@@ -12,8 +12,8 @@ public class User
     private String      username; // an email
     private String      password;
     private long        permissions;
-    private String      lastname;
-    private String      firstname;
+    private String      lastName;
+    private String      firstName;
     private String      cnp;   // 13 chars
     private String      phone; // 10 chars
 
@@ -35,12 +35,12 @@ public class User
 
     }
 
-    public User(String username, String password, long permissions, String lastname, String firstname, String cnp, String phone) {
+    public User(String username, String password, long permissions, String lastName, String firstName, String cnp, String phone) {
         this.username = username;
         this.password = password;
         this.permissions = permissions;
-        this.lastname = lastname;
-        this.firstname = firstname;
+        this.lastName = lastName;
+        this.firstName = firstName;
         this.cnp = cnp;
         this.phone = phone;
 
@@ -106,20 +106,20 @@ public class User
         this.id = id;
     }
 
-    public String getLastname() {
-        return lastname;
+    public String getLastName() {
+        return lastName;
     }
 
-    public void setLastname(String lastname) {
-        this.lastname = lastname;
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
-    public String getFirstname() {
-        return firstname;
+    public String getFirstName() {
+        return firstName;
     }
 
-    public void setFirstname(String firstname) {
-        this.firstname = firstname;
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
     }
 
     public String getCnp() {
