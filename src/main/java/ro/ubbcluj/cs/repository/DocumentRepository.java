@@ -37,4 +37,10 @@ public class DocumentRepository {
     public void Reject(int documentId) {
         //TODO change the document to draft and
     }
+
+    public String getNameForDownload(String documentType, int documentStatus, String username) {
+        //TODO get the name of last document(specified by documentType and documentStatus) upload by user(specified by username)
+
+        return "CoolName";
+    }
 }
