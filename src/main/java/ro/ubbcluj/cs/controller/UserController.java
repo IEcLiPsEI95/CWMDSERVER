@@ -249,6 +249,10 @@ public class UserController
             log.error("Failed to update user: " + username);
             log.error(cnpIsNullOrInvalid.getMessage());
             throw new RequestException("Update failed. CnpIsNullOrInvalid", HttpStatus.BAD_REQUEST);
+        } catch (UserRepository.UsersGroupIdIsZero usersGroupIdIsZero) {
+            log.error("Failed to update user: " + username);
+            log.error(usersGroupIdIsZero.getMessage());
+            throw new RequestException("Update failed. UsersGroupIdIsZero", HttpStatus.BAD_REQUEST);
         }
     }
     

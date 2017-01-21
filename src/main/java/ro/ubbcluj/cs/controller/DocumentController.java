@@ -3,11 +3,26 @@ package ro.ubbcluj.cs.controller;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 import ro.ubbcluj.cs.domain.Document;
 import ro.ubbcluj.cs.domain.User;
 import ro.ubbcluj.cs.repository.DocumentRepository;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 
 /**
  * Created by hlupean on 17-Nov-16.
@@ -19,7 +34,7 @@ public class DocumentController {
     private DocumentRepository repoDocs;
 
     private static Logger log = LogManager.getLogger(DocumentController.class);
-
+    private final Path rootLocation = Paths.get("./src/main/resources/DocumentVersions");
     private DocumentController() {
         log.info("DocumentController");
     }
@@ -60,20 +75,6 @@ public class DocumentController {
     public String GetNameForDownload(String documentType, int documentStatus, User user) {
         return repoDocs.getNameForDownload(documentType, documentStatus, user.getUsername());
     }
-
-    private final Path rootLocation;
-
-    @Autowired
-    public DocumentController() {
-        this.rootLocation = Paths.get("./src/main/resources/DocumentVersions");
-        log.info("DocumentController");
-    }
-
-    @Autowired
-    private DocumentRepository repoDocs;
-
-    private static Logger log = LogManager.getLogger(DocumentController.class);
-
     public void store(MultipartFile file, String name) {
         try {
             if (file.isEmpty()) {
@@ -107,6 +108,14 @@ public class DocumentController {
             throw new FileNotFoundException();
         }
 
+    }
+
+    public void init() {
+        try {
+            Files.createDirectory(rootLocation);
+        } catch (IOException e) {
+            log.error("Could not initialize storage", e);
+        }
     }
 
 }

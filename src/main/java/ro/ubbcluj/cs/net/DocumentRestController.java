@@ -1,19 +1,29 @@
 package ro.ubbcluj.cs.net;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.core.io.Resource;
+import ro.ubbcluj.cs.controller.DocumentController;
 import ro.ubbcluj.cs.controller.UserController;
 import ro.ubbcluj.cs.domain.CWMDRequestResponse;
-import ro.ubbcluj.cs.domain.User;
+import ro.ubbcluj.cs.domain.Document;
 import ro.ubbcluj.cs.domain.UserPerm;
-import ro.ubbcluj.cs.session.SessionManager;
-import ro.ubbcluj.cs.controller.DocumentController;
+import ro.ubbcluj.cs.repository.DocumentRepository;
 
-import javax.annotation.Resource;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import org.apache.commons.logging.LogFactory;
+import ro.ubbcluj.cs.session.SessionManager;
+import ro.ubbcluj.cs.domain.User;
+
+import java.io.FileNotFoundException;
 
 
 /**
@@ -75,24 +85,6 @@ public class DocumentRestController
         
     }
 
-    private final Path rootLocation;
-
-    @Autowired
-    public DocumentController() {
-        this.rootLocation = Paths.get("./src/main/resources/DocumentVersions");
-        log.info("DocumentController");
-    }
-
-    private static Logger log = LogManager.getLogger(AuthRestController.class);
-
-    private DocumentController ctrlDocs = new DocumentController();
-
-
-    @Autowired
-    public DocumentRestController(DocumentController Ctrl) {
-        this.ctrlDocs = Ctrl;
-    }
-
     @RequestMapping(value = "download", method = RequestMethod.GET)
     @ResponseBody
     public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
@@ -127,9 +119,6 @@ public class DocumentRestController
 
         return "redirect:/";
     }
-
-
-
 
 
 }
