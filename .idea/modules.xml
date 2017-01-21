@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/CWMDSERVER.iml" filepath="$PROJECT_DIR$/CWMDSERVER.iml" />
       <module fileurl="file://$PROJECT_DIR$/cwmd-server.iml" filepath="$PROJECT_DIR$/cwmd-server.iml" />
     </modules>
   </component>
