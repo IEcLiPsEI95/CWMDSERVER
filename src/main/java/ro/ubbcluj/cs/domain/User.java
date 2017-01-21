@@ -165,4 +165,8 @@ public class User
     public void setType(String type) {
         this.type = type;
     }
+
+    public void setGroupName(String groupName) {
+        this.groupName = groupName;
+    }
 }

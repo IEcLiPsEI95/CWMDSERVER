@@ -24,6 +24,7 @@ public class UserRowMapper implements RowMapper<User> {
         user.setCnp(resultSet.getString("cnp"));
         user.setPhone(resultSet.getString("phone"));
         user.setGroupId(resultSet.getInt("idGroup"));
+        user.setGroupName(resultSet.getString("groupName"));
         return user;
     }
 }
