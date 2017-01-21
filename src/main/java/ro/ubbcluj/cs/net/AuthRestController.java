@@ -62,6 +62,7 @@ public class AuthRestController
         try
         {
             User user = sm.Login(username, password);
+            user.setType(ctrlUser.getType(user.getPermissions()));
             log.info(String.format("User [%1s] logged-in with success. User permissions: [%2s]", username, user.getPermissions()));
             return CWMDRequestResponse.createResponse(user.getToken(), user, user.getPermissions(), HttpStatus.OK);
         }
@@ -84,7 +85,7 @@ public class AuthRestController
         
         try
         {
-            User user = sm.GetLoggedInUser(token, UserPerm.PERM_LOGOUT_USER);
+            User user = sm.GetLoggedInUser(token, UserPerm.PERM_ADMIN);
             log.error(String.format("User [%1s] has enough permissions to logout user [%2s]", user.getUsername(), usernameToLogout));
             
             sm.Logout(usernameToLogout);
@@ -131,7 +132,7 @@ public class AuthRestController
     {
         try
         {
-            User user = sm.GetLoggedInUser(token, UserPerm.PERM_GET_USER);
+            User user = sm.GetLoggedInUser(token, UserPerm.PERM_ADMIN);
 //            log.info(String.format("User [%1s] is trying to get user [%1s}", user.getUsername(), usernameToGet));
             
             if (timestamp > ctrlUser.getLastUpdateTime())
@@ -163,7 +164,7 @@ public class AuthRestController
         
         try
         {
-            User user = sm.GetLoggedInUser(token, UserPerm.PERM_GET_USER);
+            User user = sm.GetLoggedInUser(token, UserPerm.PERM_ADMIN);
             log.info(String.format("User [%1s] is trying to get user [%1s}", user.getUsername(), usernameToGet));
             
             User userResp = ctrlUser.GetUserByUsername(usernameToGet);
@@ -197,7 +198,7 @@ public class AuthRestController
         log.info(String.format("Trying to add: username=[%1s]", usernameToAdd));
         try
         {
-            User user = sm.GetLoggedInUser(token, UserPerm.PERM_ADD_USER);
+            User user = sm.GetLoggedInUser(token, UserPerm.PERM_ADMIN);
             log.info(String.format("User [%1s] has enough permissions to add user [%2s]", user.getUsername(), usernameToAdd));
             
             ctrlUser.AddUser(usernameToAdd, passwordToAdd, permissionsToAdd, lastName, firstName, cnp, phone, groupName);
@@ -224,7 +225,7 @@ public class AuthRestController
         
         try
         {
-            User user = sm.GetLoggedInUser(token, UserPerm.PERM_DELETE_USER | UserPerm.PERM_LOGOUT_USER);
+            User user = sm.GetLoggedInUser(token, UserPerm.PERM_ADMIN);
             log.info(String.format("User [%1s] has enough permissions to delete user [%2s]", user.getUsername(), usernameToDelete));
     
             ctrlUser.DeleteUser(usernameToDelete);
@@ -258,7 +259,7 @@ public class AuthRestController
 
         try
         {
-            User user = sm.GetLoggedInUser(token, (int) UserPerm.PERM_UPDATE_USER);
+            User user = sm.GetLoggedInUser(token, (int) UserPerm.PERM_ADMIN);
             log.info(String.format("User [%1s] has enough permissions to update user [%2s]", user.getUsername(), usernameToUpdate));
     
             ctrlUser.UpdateUser(usernameToUpdate, password, permissions, lastName, firstName, cnp, phone, groupName, user);
@@ -286,7 +287,7 @@ public class AuthRestController
         
         try
         {
-            User user = sm.GetLoggedInUser(token, UserPerm.PERM_GET_USER);
+            User user = sm.GetLoggedInUser(token, UserPerm.PERM_ADMIN);
             log.info(String.format("User [%1s] is trying to get all users", user.getUsername()));
             
             List<User> userResp = ctrlUser.GetAllUsers();

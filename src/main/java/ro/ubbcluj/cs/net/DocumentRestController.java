@@ -44,7 +44,7 @@ public class DocumentRestController
                                                 @RequestBody int documentId)
     {
         try{
-            User user = sm.GetLoggedInUser(token, UserPerm.PERM_SIGN_DOCUMENT);
+            User user = sm.GetLoggedInUser(token, UserPerm.PERM_MANAGER);
             ctrlDocs.Sign(documentId, user);
             return CWMDRequestResponse.createResponse("OK", HttpStatus.OK);
         }
@@ -61,7 +61,7 @@ public class DocumentRestController
                              @RequestBody int documentId)
     {
         try{
-            User user = sm.GetLoggedInUser(token, UserPerm.PERM_SIGN_DOCUMENT);
+            User user = sm.GetLoggedInUser(token, UserPerm.PERM_MANAGER);
             ctrlDocs.Reject(documentId, user);
             return CWMDRequestResponse.createResponse("OK", HttpStatus.OK);
         }

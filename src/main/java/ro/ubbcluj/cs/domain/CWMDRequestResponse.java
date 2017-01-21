@@ -96,6 +96,7 @@ public class CWMDRequestResponse
         resp.put("permissions", String.valueOf(permissions));
         resp.put("status",      String.valueOf(status));
         
+        
         Gson g = new GsonBuilder().disableHtmlEscaping().create();
         String jsonResp = g.toJson(resp);
 

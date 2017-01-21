@@ -284,7 +284,12 @@ public class UserController
             throw new RequestException(ex.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
-    
+
+    public String getType(long permissions) {
+
+        return null;
+    }
+
     public static class RequestException extends Throwable
     {
         private HttpStatus status;

@@ -7,7 +7,7 @@ import java.util.Date;
  */
 public class User
 {
-    // form database
+    // from database
     private int         id;
     private String      username; // an email
     private String      password;
@@ -22,6 +22,7 @@ public class User
     // application
     private String      token;
     private long        loggedInTime;
+    private String      type;
     
     public User(String username, String password, long permissions)
     {
@@ -155,5 +156,13 @@ public class User
     public String getGroupName()
     {
         return groupName;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 }
