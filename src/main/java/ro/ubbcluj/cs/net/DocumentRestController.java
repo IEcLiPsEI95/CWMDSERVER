@@ -18,6 +18,8 @@ import org.apache.logging.log4j.Logger;
 import org.apache.commons.logging.LogFactory;
 import ro.ubbcluj.cs.session.SessionManager;
 import ro.ubbcluj.cs.domain.User;
+
+import java.nio.file.attribute.UserPrincipal;
 import java.util.Collection;
 
 /**
@@ -71,6 +73,38 @@ public class DocumentRestController
             log.error(e.getMessage());
             return CWMDRequestResponse.createResponse(e.getMessage(), e.getStatus());
         }
+    }
+
+    @RequestMapping(value = "sign", method = RequestMethod.POST)
+    public @ResponseBody ResponseEntity<?> Sign(@RequestHeader(value = TOKEN_HEADER, required = true) String token,
+                                     @RequestBody int documentId)
+    {
+        try{
+            User user = sm.GetLoggedInUser(token, UserPerm.PERM_SIGN_DOCUMENT);
+            ctrlDocs.Sign(documentId, user);
+            return CWMDRequestResponse.createResponse("OK", HttpStatus.OK);
+        }
+        catch (UserController.RequestException e) {
+            log.error(e.getMessage());
+            return CWMDRequestResponse.createResponse(e.getMessage(), e.getStatus());
+        }
+
+    }
+
+    @RequestMapping(value = "reject", method = RequestMethod.POST)
+    public @ResponseBody ResponseEntity<?> Reject(@RequestHeader(value = TOKEN_HEADER, required = true) String token,
+                                                @RequestBody int documentId)
+    {
+        try{
+            User user = sm.GetLoggedInUser(token, UserPerm.PERM_SIGN_DOCUMENT);
+            ctrlDocs.Reject(documentId, user);
+            return CWMDRequestResponse.createResponse("OK", HttpStatus.OK);
+        }
+        catch (UserController.RequestException e) {
+            log.error(e.getMessage());
+            return CWMDRequestResponse.createResponse(e.getMessage(), e.getStatus());
+        }
+
     }
     
 }

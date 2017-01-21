@@ -16,11 +16,12 @@ public class User
     private String      firstName;
     private String      cnp;   // 13 chars
     private String      phone; // 10 chars
+    private int         groupId;
 
     // application
     private String      token;
     private long        loggedInTime;
-    
+
     public User(String username, String password, long permissions)
     {
         this.username       = username;
@@ -136,5 +137,9 @@ public class User
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public int getGroupId() {
+        return groupId;
     }
 }

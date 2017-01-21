@@ -16,6 +16,7 @@ public class UserPerm
     public static final long PERM_LOGOUT_USER       = 0x00000010; // permission to logout OTHER users
 
     public static final long PERM_ADD_DOCUMENT      = 0x00000020; 
-    
+    public static final long PERM_SIGN_DOCUMENT     = 0x00000040;
+
     public static final long PERM_ALL               = -1; // asta-i dumnezo
 }
