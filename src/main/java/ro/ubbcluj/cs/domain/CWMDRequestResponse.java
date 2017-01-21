@@ -99,6 +99,6 @@ public class CWMDRequestResponse
         Gson g = new GsonBuilder().disableHtmlEscaping().create();
         String jsonResp = g.toJson(resp);
 
-        return new ResponseEntity<>(jsonResp, HttpStatus.OK);
+        return new ResponseEntity<>(jsonResp, status);
     }
-}
+}   

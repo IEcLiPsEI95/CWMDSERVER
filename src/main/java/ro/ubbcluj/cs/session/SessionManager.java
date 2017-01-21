@@ -207,7 +207,7 @@ public class SessionManager
         {
             log.error("User " + user.getUsername() + " is already logged in.");
             listMutex.unlock();
-            throw new UserController.RequestException("User " + user.getUsername() + " is already logged in.", HttpStatus.CONFLICT);
+            throw new UserController.RequestException("User " + user.getUsername() + " is already logged in.", HttpStatus.BAD_REQUEST);
         }
         
         user.setLoggedInTime(System.currentTimeMillis());

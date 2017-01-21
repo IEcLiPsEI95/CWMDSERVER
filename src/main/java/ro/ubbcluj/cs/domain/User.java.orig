@@ -140,6 +140,12 @@ public class User
     public void setPhone(String phone) {
         this.phone = phone;
     }
+<<<<<<< Updated upstream
+
+    public int getGroupId() {
+        return groupId;
+    }
+=======
     
     public int getGroupId()
     {
@@ -150,4 +156,5 @@ public class User
     {
         this.groupId = groupId;
     }
+>>>>>>> Stashed changes
 }

@@ -49,63 +49,6 @@ public class DocumentRestController
     }
     
     
-    @RequestMapping(value = "upload", method = RequestMethod.POST)
-    public ResponseEntity<?> UploadDocument(
-            @RequestHeader(value = TOKEN_HEADER, required = true) String token,
-            @RequestBody Byte[] content, // CEVA..
-            @RequestBody boolean markAsFinal // CEVA..
-            )
-    {
-        try
-        {
-            User user = sm.GetLoggedInUser(token, UserPerm.PERM_ADD_DOCUMENT);
-            log.info(String.format("User [%1s] has enough permissions to add document", user.getUsername()));
-        
-            if (markAsFinal)
-            {
-//                notifyUsers(ctrlDocs.GetSignatures(user));
-            }
-            
-            return CWMDRequestResponse.createResponse("OK", HttpStatus.OK);
-        }
-        catch (UserController.RequestException e)
-        {
-            log.error(e.getMessage());
-            return CWMDRequestResponse.createResponse(e.getMessage(), e.getStatus());
-        }
-    }
 
-    @RequestMapping(value = "sign", method = RequestMethod.POST)
-    public @ResponseBody ResponseEntity<?> Sign(@RequestHeader(value = TOKEN_HEADER, required = true) String token,
-                                     @RequestBody int documentId)
-    {
-        try{
-            User user = sm.GetLoggedInUser(token, UserPerm.PERM_SIGN_DOCUMENT);
-            ctrlDocs.Sign(documentId, user);
-            return CWMDRequestResponse.createResponse("OK", HttpStatus.OK);
-        }
-        catch (UserController.RequestException e) {
-            log.error(e.getMessage());
-            return CWMDRequestResponse.createResponse(e.getMessage(), e.getStatus());
-        }
-
-    }
-
-    @RequestMapping(value = "reject", method = RequestMethod.POST)
-    public @ResponseBody ResponseEntity<?> Reject(@RequestHeader(value = TOKEN_HEADER, required = true) String token,
-                                                @RequestBody int documentId)
-    {
-        try{
-            User user = sm.GetLoggedInUser(token, UserPerm.PERM_SIGN_DOCUMENT);
-            ctrlDocs.Reject(documentId, user);
-            return CWMDRequestResponse.createResponse("OK", HttpStatus.OK);
-        }
-        catch (UserController.RequestException e) {
-            log.error(e.getMessage());
-            return CWMDRequestResponse.createResponse(e.getMessage(), e.getStatus());
-        }
-
-    }
-    
 }
 
