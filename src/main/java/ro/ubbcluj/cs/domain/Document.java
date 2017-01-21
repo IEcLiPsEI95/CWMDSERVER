@@ -17,7 +17,7 @@ public class Document
     private int status;                         // 1 - draft; 2 - final; 3 - final_revizuit, 4 - blocked (gata)
     private int whosNext;                       // id from signOrder
     private int idDocumentType;
-    
+
     public Document() {
     }
 
@@ -84,12 +84,12 @@ public class Document
     public void setWhosNext(int whosNext) {
         this.whosNext = whosNext;
     }
-    
+
     public int getIdDocumentType()
     {
         return idDocumentType;
     }
-    
+
     public void setIdDocumentType(int idDocumentType)
     {
         this.idDocumentType = idDocumentType;
