@@ -17,11 +17,12 @@ public class User
     private String      cnp;   // 13 chars
     private String      phone; // 10 chars
     private int         groupId;
+    private String      groupName;
 
     // application
     private String      token;
     private long        loggedInTime;
-
+    
     public User(String username, String password, long permissions)
     {
         this.username       = username;
@@ -35,8 +36,8 @@ public class User
     public User() {
 
     }
-
-    public User(String username, String password, long permissions, String lastName, String firstName, String cnp, String phone, int groupId) 
+    
+    public User(String username, String password, long permissions, String lastName, String firstName, String cnp, String phone, int groupId)
     {
         this.username       = username;
         this.password       = password;
@@ -50,7 +51,7 @@ public class User
         token               = null;
         loggedInTime        = 0;
     }
-
+    
     public String getUsername()
     {
         return username;
@@ -149,5 +150,10 @@ public class User
     public void setGroupId(int groupId)
     {
         this.groupId = groupId;
+    }
+    
+    public String getGroupName()
+    {
+        return groupName;
     }
 }

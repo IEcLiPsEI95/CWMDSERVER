@@ -192,6 +192,7 @@ public class AuthRestController
         String firstName        = reqUser.getFirstName();
         String cnp              = reqUser.getCnp();
         String phone            = reqUser.getPhone();
+        String groupName        = reqUser.getGroupName();
         
         log.info(String.format("Trying to add: username=[%1s]", usernameToAdd));
         try
@@ -199,7 +200,7 @@ public class AuthRestController
             User user = sm.GetLoggedInUser(token, UserPerm.PERM_ADD_USER);
             log.info(String.format("User [%1s] has enough permissions to add user [%2s]", user.getUsername(), usernameToAdd));
             
-            ctrlUser.AddUser(usernameToAdd, passwordToAdd, permissionsToAdd, lastName, firstName, cnp, phone);
+            ctrlUser.AddUser(usernameToAdd, passwordToAdd, permissionsToAdd, lastName, firstName, cnp, phone, groupName);
             log.info(String.format("User [%1s] was created with success by user [%2s]", usernameToAdd, user.getUsername()));
             
             return CWMDRequestResponse.createResponse("OK", HttpStatus.OK);
@@ -253,14 +254,17 @@ public class AuthRestController
         String cnp                  = reqUser.getCnp();
         String phone                = reqUser.getPhone();
         long permissions            = reqUser.getPermissions();
+        String groupName            = reqUser.getGroupName();
 
         try
         {
             User user = sm.GetLoggedInUser(token, (int) UserPerm.PERM_UPDATE_USER);
             log.info(String.format("User [%1s] has enough permissions to update user [%2s]", user.getUsername(), usernameToUpdate));
     
-            ctrlUser.UpdateUser(usernameToUpdate, password, permissions, lastName, firstName, cnp, phone, user);
-            sm.UpdateInfo(new User(usernameToUpdate, null, permissions, lastName, firstName, cnp, phone));
+            ctrlUser.UpdateUser(usernameToUpdate, password, permissions, lastName, firstName, cnp, phone, groupName, user);
+            int groupId = ctrlUser.GetGroupId(groupName);
+            
+            sm.UpdateInfo(new User(usernameToUpdate, null, permissions, lastName, firstName, cnp, phone, groupId));
             log.info(String.format("User [%1s] was updated with success", usernameToUpdate));
             
             return CWMDRequestResponse.createResponse("OK", HttpStatus.OK);

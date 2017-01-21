@@ -326,8 +326,15 @@ public class UserRepository {
             throw e;
         }
     }
-
-
+    
+    public int GetGroupIdByName(String groupName)
+    {
+        //// TODO: return group id from username CORNELIUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUu
+        
+        return 0;
+    }
+    
+    
     public class InvalidUserId extends Throwable {
     }
 

@@ -72,7 +72,7 @@ public class UserController
         }
     }
     
-    public void AddUser(String username, String password, long permissions, String lastname, String firstname, String cnp, String phone) throws RequestException
+    public void AddUser(String username, String password, long permissions, String lastname, String firstname, String cnp, String phone, String groupName) throws RequestException
     {
         if (null == username || username.isEmpty())
         {
@@ -116,7 +116,8 @@ public class UserController
         
         try
         {
-            User user = new User(username, password, permissions, lastname, firstname, cnp, phone);
+            int groupId = repoUser.GetGroupIdByName(groupName);
+            User user = new User(username, password, permissions, lastname, firstname, cnp, phone, groupId);
             repoUser.insert(user);
             log.info("User: " + username + " was added with success");
             lastUpdateTime = System.currentTimeMillis();
@@ -146,7 +147,7 @@ public class UserController
         return true;
     }
     
-    public void UpdateUser(String username, String password, long permissions, String lastName, String firstName, String cnp, String phone, User oldUser) throws RequestException
+    public void UpdateUser(String username, String password, long permissions, String lastName, String firstName, String cnp, String phone, String groupName, User oldUser) throws RequestException
     {
         String passToAdd;
         if (null == username || username.isEmpty())
@@ -195,7 +196,8 @@ public class UserController
         
         try
         {
-            User user = new User(username, passToAdd, permissions, lastName, firstName, cnp, phone);
+            int groupId = repoUser.GetGroupIdByName(groupName);
+            User user = new User(username, passToAdd, permissions, lastName, firstName, cnp, phone, groupId);
             repoUser.updateUser(username, user);
             log.info("User: " + username + " was updated with success");
             lastUpdateTime = System.currentTimeMillis();
@@ -266,6 +268,20 @@ public class UserController
         catch (Exception ex)
         {
             throw new RequestException(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    
+    public int GetGroupId(String groupName) throws RequestException
+    {
+        try
+        {
+            int id = repoUser.GetGroupIdByName(groupName);
+            log.info("Found id " + id + " for group: " + groupName);
+            return id;
+        }
+        catch (Exception ex)
+        {
+            throw new RequestException(ex.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
     

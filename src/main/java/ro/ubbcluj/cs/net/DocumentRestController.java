@@ -1,26 +1,11 @@
 package ro.ubbcluj.cs.net;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
-import ro.ubbcluj.cs.controller.DocumentController;
-import ro.ubbcluj.cs.controller.UserController;
-import ro.ubbcluj.cs.domain.CWMDRequestResponse;
-import ro.ubbcluj.cs.domain.Document;
-import ro.ubbcluj.cs.domain.UserPerm;
-import ro.ubbcluj.cs.repository.DocumentRepository;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
 import ro.ubbcluj.cs.session.SessionManager;
-import ro.ubbcluj.cs.domain.User;
-
-import java.nio.file.attribute.UserPrincipal;
-import java.util.Collection;
+import ro.ubbcluj.cs.controller.DocumentController;
 
 /**
  * Created by hzugr on 11/15/2016.
@@ -47,8 +32,6 @@ public class DocumentRestController
         log.info("s-o conectat: " + id);
         return Integer.toString(id * 2);
     }
-    
-    
 
 }
 
