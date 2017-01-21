@@ -8,6 +8,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ro.ubbcluj.cs.domain.User;
+import ro.ubbcluj.cs.domain.UserGroup;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
@@ -20,9 +21,9 @@ import java.util.List;
  */
 @Repository
 public class UserRepository {
-    
+
     private static Logger log = LogManager.getLogger(UserRepository.class);
-    
+
     @Autowired
     JdbcTemplate jdbcTemplate;
 
@@ -44,12 +45,10 @@ public class UserRepository {
     }
 
     /**
-     
      * @return null daca user-ul nu este in baza de date sau user-ul care sa sters
      * @throws InvalidUserId daca userId este <= 0
      */
-    public User delete(String username) throws InvalidUserId, UsersUsernameIsNull
-    {
+    public User delete(String username) throws InvalidUserId, UsersUsernameIsNull {
         User user = getUserByUsername(username);
         if (user != null) {
             try {
@@ -76,7 +75,7 @@ public class UserRepository {
      * @throws UsernameIsNull daca username == null
      */
     public User getUserByUsernameAndPassword(String username, String password) throws PasswordIsNull, UsernameIsNull {
-    
+
         if (username == null) throw new UsernameIsNull();
         if (password == null) throw new PasswordIsNull();
 
@@ -119,17 +118,16 @@ public class UserRepository {
     }
 
     /**
-     
      * @param password noua parola
      * @throws InvalidUserId  daca userId <= 0
      * @throws UserNotFound   daca user-ul nu exista in baza de date
      * @throws PasswordIsNull daca password == null
      */
     public void updatePassword(String username, String password) throws UsernameIsNull, UserNotFound, PasswordIsNull, UsersUsernameIsNull {
-        if (username == null) throw new  UsernameIsNull();
+        if (username == null) throw new UsernameIsNull();
         if (password == null) throw new PasswordIsNull();
         if (getUserByUsername(username) == null) throw new UserNotFound();
-        
+
         try {
             jdbcTemplate.update(connection -> {
                 PreparedStatement ps;
@@ -145,12 +143,11 @@ public class UserRepository {
     }
 
     /**
-     
      * @param permissions noile permisiuni
      * @throws InvalidUserId daca userId <= 0
      * @throws UserNotFound  daca user-ul nu exista in baza de date
      */
-    public void updatePermissions(String  username, long permissions) throws UsersUsernameIsNull, UserNotFound {
+    public void updatePermissions(String username, long permissions) throws UsersUsernameIsNull, UserNotFound {
         if (username == null) throw new UsersUsernameIsNull();
         if (getUserByUsername(username) == null) throw new UserNotFound();
         try {
@@ -180,7 +177,7 @@ public class UserRepository {
         }
     }
 
-    public List<User> getAllUsers(){
+    public List<User> getAllUsers() {
         try {
             return jdbcTemplate.query("SELECT id, username,permissions,lastname,firstname,cnp,phone,idGroup FROM users",
                     new UserRowMapper());
@@ -189,10 +186,10 @@ public class UserRepository {
             throw e;
         }
     }
-    
+
     public User getUserByUsername(String username) throws UsersUsernameIsNull {
         if (username == null) throw new UsersUsernameIsNull();
-        
+
         try {
             List<User> users = jdbcTemplate.query("SELECT id, username,permissions,lastname,firstname,cnp,phone,idGroup FROM users WHERE username = ?",
                     new Object[]{username}, new UserRowMapper());
@@ -202,7 +199,7 @@ public class UserRepository {
             throw e;
         }
     }
-    
+
     private int insertAndGetId(User user) throws UserIsNull, UsersPasswordIsNull, UsersUsernameIsNull, UsersLastnameIsNull, UsersFirstnameIsNull, UsersCnpIsInvalid, UsersPhoneIsInvalid {
         if (user == null) throw new UserIsNull();
         if (user.getPassword() == null) throw new UsersPasswordIsNull();
@@ -220,16 +217,16 @@ public class UserRepository {
                         "INSERT INTO users (username,password,permissions,lastname,firstname,cnp,phone) VALUES (?,md5(?),?,?,?,?,?)",
                         Statement.RETURN_GENERATED_KEYS
                 );
-                
+
                 ps.setString(1, user.getUsername());
                 ps.setString(2, user.getPassword());
                 ps.setLong(3, user.getPermissions());
                 ps.setString(4, user.getLastName());
-                ps.setString(5,user.getFirstName());
+                ps.setString(5, user.getFirstName());
                 ps.setString(6, user.getCnp());
                 ps.setString(7, user.getPhone());
                 return ps;
-            
+
             }, keyHolder);
             return keyHolder.getKey().intValue();
         } catch (Exception e) {
@@ -237,11 +234,10 @@ public class UserRepository {
             throw e;
         }
     }
-    
+
     public void updateUser(String username, User user) throws UsernameIsNull, UsersUsernameIsNull, UserNotFound, PasswordIsNull, PhoneIsNull, LastnameIsNull, FirstnameIsNull, CnpIsNullOrInvalid {
-        
-        if (null != user.getPassword())
-        {
+
+        if (null != user.getPassword()) {
             updatePassword(username, user.getPassword());
         }
         updatePermissions(username, user.getPermissions());
@@ -252,7 +248,7 @@ public class UserRepository {
     }
 
     private void updatePhone(String username, String phone) throws UsersUsernameIsNull, UsernameIsNull, UserNotFound, PhoneIsNull {
-        if (username == null) throw new  UsernameIsNull();
+        if (username == null) throw new UsernameIsNull();
         if (phone == null) throw new PhoneIsNull();
         if (getUserByUsername(username) == null) throw new UserNotFound();
 
@@ -271,7 +267,7 @@ public class UserRepository {
     }
 
     private void updateCnp(String username, String cnp) throws UsernameIsNull, CnpIsNullOrInvalid, UserNotFound, UsersUsernameIsNull {
-        if (username == null) throw new  UsernameIsNull();
+        if (username == null) throw new UsernameIsNull();
         if (cnp == null || cnp.length() != 13) throw new CnpIsNullOrInvalid();
         if (getUserByUsername(username) == null) throw new UserNotFound();
 
@@ -290,7 +286,7 @@ public class UserRepository {
     }
 
     private void updateFirstname(String username, String firstname) throws UsernameIsNull, UsersUsernameIsNull, UserNotFound, FirstnameIsNull {
-        if (username == null) throw new  UsernameIsNull();
+        if (username == null) throw new UsernameIsNull();
         if (firstname == null) throw new FirstnameIsNull();
         if (getUserByUsername(username) == null) throw new UserNotFound();
 
@@ -309,7 +305,7 @@ public class UserRepository {
     }
 
     private void updateLastname(String username, String lastname) throws UsernameIsNull, LastnameIsNull, UsersUsernameIsNull, UserNotFound {
-        if (username == null) throw new  UsernameIsNull();
+        if (username == null) throw new UsernameIsNull();
         if (lastname == null) throw new LastnameIsNull();
         if (getUserByUsername(username) == null) throw new UserNotFound();
 
@@ -326,15 +322,32 @@ public class UserRepository {
             throw e;
         }
     }
-    
-    public int GetGroupIdByName(String groupName)
-    {
-        //// TODO: return group id from username CORNELIUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUu
-        
-        return 0;
+
+    public int GetGroupIdByName(String groupName) {
+        try {
+            List<UserGroup> query = jdbcTemplate.query("select id, name from groups where name = ?", new Object[]{groupName}, new UserGroupRowMapper());
+            if (query.size() == 1) {
+                return query.get(0).getId();
+            }
+            KeyHolder keyHolder = new GeneratedKeyHolder();
+            jdbcTemplate.update(connection -> {
+                PreparedStatement ps;
+                ps = connection.prepareStatement(
+                        "insert into groups (name) values (?)",
+                        Statement.RETURN_GENERATED_KEYS
+                );
+                ps.setString(1, groupName);
+                return ps;
+
+            }, keyHolder);
+            return keyHolder.getKey().intValue();
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw e;
+        }
     }
-    
-    
+
+
     public class InvalidUserId extends Throwable {
     }
 
