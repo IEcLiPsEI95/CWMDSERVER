@@ -133,7 +133,7 @@ public class UserRepository {
         try {
             jdbcTemplate.update(connection -> {
                 PreparedStatement ps;
-                ps = connection.prepareStatement("UPDATE users SET password = ? WHERE username = ?");
+                ps = connection.prepareStatement("UPDATE users SET password = md5(?) WHERE username = ?");
                 ps.setString(1, password);
                 ps.setString(2, username);
                 return ps;
@@ -217,7 +217,7 @@ public class UserRepository {
             jdbcTemplate.update(connection -> {
                 PreparedStatement ps;
                 ps = connection.prepareStatement(
-                        "INSERT INTO users (username,password,permissions,lastname,firstname,cnp,phone) VALUES (?,?,?,?,?,?,?)",
+                        "INSERT INTO users (username,password,permissions,lastname,firstname,cnp,phone) VALUES (?,md5(?),?,?,?,?,?)",
                         Statement.RETURN_GENERATED_KEYS
                 );
                 
