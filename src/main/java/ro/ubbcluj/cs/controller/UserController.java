@@ -125,7 +125,7 @@ public class UserController
         {
             log.error("Failed to add user: " + username);
             log.error(e.getMessage());
-            throw new RequestException("Insert failed. WHY???", HttpStatus.BAD_REQUEST);
+            throw new RequestException("Insert failed.", HttpStatus.BAD_REQUEST);
         }
     }
     

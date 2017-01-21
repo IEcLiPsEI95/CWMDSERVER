@@ -217,7 +217,7 @@ public class UserRepository {
             jdbcTemplate.update(connection -> {
                 PreparedStatement ps;
                 ps = connection.prepareStatement(
-                        "INSERT INTO users (username,permissions,lastname,firstname,cnp,phone) VALUES (?,?,?,?,?,?,?)",
+                        "INSERT INTO users (username,password,permissions,lastname,firstname,cnp,phone) VALUES (?,?,?,?,?,?,?)",
                         Statement.RETURN_GENERATED_KEYS
                 );
                 
