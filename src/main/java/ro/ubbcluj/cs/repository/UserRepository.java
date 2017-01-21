@@ -35,7 +35,7 @@ public class UserRepository {
      * @throws UserIsNull          user-ul este null
      * @throws UsersUsernameIsNull username-ul este null
      */
-    public void insert(User user) throws UsersPasswordIsNull, UserIsNull, UsersUsernameIsNull, UsersFirstnameIsNull, UsersCnpIsInvalid, UsersPhoneIsInvalid, UsersLastnameIsNull {
+    public void insert(User user) throws UsersPasswordIsNull, UserIsNull, UsersUsernameIsNull, UsersFirstnameIsNull, UsersCnpIsInvalid, UsersPhoneIsInvalid, UsersLastnameIsNull, UsersGroupIdIsZero {
         try {
             user.setId(insertAndGetId(user));
         } catch (NullPointerException e) {
@@ -200,7 +200,7 @@ public class UserRepository {
         }
     }
 
-    private int insertAndGetId(User user) throws UserIsNull, UsersPasswordIsNull, UsersUsernameIsNull, UsersLastnameIsNull, UsersFirstnameIsNull, UsersCnpIsInvalid, UsersPhoneIsInvalid {
+    private int insertAndGetId(User user) throws UserIsNull, UsersPasswordIsNull, UsersUsernameIsNull, UsersLastnameIsNull, UsersFirstnameIsNull, UsersCnpIsInvalid, UsersPhoneIsInvalid, UsersGroupIdIsZero {
         if (user == null) throw new UserIsNull();
         if (user.getPassword() == null) throw new UsersPasswordIsNull();
         if (user.getUsername() == null) throw new UsersUsernameIsNull();
@@ -208,13 +208,14 @@ public class UserRepository {
         if (user.getFirstName() == null) throw new UsersFirstnameIsNull();
         if (user.getCnp() == null || user.getCnp().length() != 13) throw new UsersCnpIsInvalid();
         if (user.getPhone() == null || user.getPhone().length() != 10) throw new UsersPhoneIsInvalid();
+        if (user.getGroupId() == 0) throw new UsersGroupIdIsZero();
 
         try {
             KeyHolder keyHolder = new GeneratedKeyHolder();
             jdbcTemplate.update(connection -> {
                 PreparedStatement ps;
                 ps = connection.prepareStatement(
-                        "INSERT INTO users (username,password,permissions,lastname,firstname,cnp,phone) VALUES (?,md5(?),?,?,?,?,?)",
+                        "INSERT INTO users (username,password,permissions,lastname,firstname,cnp,phone, idGroup) VALUES (?,md5(?),?,?,?,?,?,?)",
                         Statement.RETURN_GENERATED_KEYS
                 );
 
@@ -225,6 +226,7 @@ public class UserRepository {
                 ps.setString(5, user.getFirstName());
                 ps.setString(6, user.getCnp());
                 ps.setString(7, user.getPhone());
+                ps.setInt(8, user.getGroupId());
                 return ps;
 
             }, keyHolder);
@@ -235,7 +237,7 @@ public class UserRepository {
         }
     }
 
-    public void updateUser(String username, User user) throws UsernameIsNull, UsersUsernameIsNull, UserNotFound, PasswordIsNull, PhoneIsNull, LastnameIsNull, FirstnameIsNull, CnpIsNullOrInvalid {
+    public void updateUser(String username, User user) throws UsernameIsNull, UsersUsernameIsNull, UserNotFound, PasswordIsNull, PhoneIsNull, LastnameIsNull, FirstnameIsNull, CnpIsNullOrInvalid, UsersGroupIdIsZero {
 
         if (null != user.getPassword()) {
             updatePassword(username, user.getPassword());
@@ -245,6 +247,26 @@ public class UserRepository {
         updateFirstname(username, user.getFirstName());
         updateCnp(username, user.getCnp());
         updatePhone(username, user.getPhone());
+        updateGroupId(username, user.getGroupId());
+    }
+
+    private void updateGroupId(String username, int groupId) throws UsersUsernameIsNull, UsernameIsNull, UserNotFound, UsersGroupIdIsZero {
+        if (username == null) throw new UsernameIsNull();
+        if (groupId == 0) throw new UsersGroupIdIsZero();
+        if (getUserByUsername(username) == null) throw new UserNotFound();
+
+        try {
+            jdbcTemplate.update(connection -> {
+                PreparedStatement ps;
+                ps = connection.prepareStatement("UPDATE users SET idGroup = ? WHERE username = ?");
+                ps.setInt(1, groupId);
+                ps.setString(2, username);
+                return ps;
+            });
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw e;
+        }
     }
 
     private void updatePhone(String username, String phone) throws UsersUsernameIsNull, UsernameIsNull, UserNotFound, PhoneIsNull {
@@ -391,5 +413,8 @@ public class UserRepository {
     }
 
     public class LastnameIsNull extends Throwable {
+    }
+
+    public class UsersGroupIdIsZero extends Throwable {
     }
 }
