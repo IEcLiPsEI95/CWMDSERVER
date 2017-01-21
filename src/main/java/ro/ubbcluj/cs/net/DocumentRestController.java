@@ -13,6 +13,9 @@ import ro.ubbcluj.cs.domain.UserPerm;
 import ro.ubbcluj.cs.session.SessionManager;
 import ro.ubbcluj.cs.controller.DocumentController;
 
+import javax.annotation.Resource;
+
+
 /**
  * Created by hzugr on 11/15/2016.
  */
@@ -71,6 +74,63 @@ public class DocumentRestController
         }
         
     }
-    
+
+    private final Path rootLocation;
+
+    @Autowired
+    public DocumentController() {
+        this.rootLocation = Paths.get("./src/main/resources/DocumentVersions");
+        log.info("DocumentController");
+    }
+
+    private static Logger log = LogManager.getLogger(AuthRestController.class);
+
+    private DocumentController ctrlDocs = new DocumentController();
+
+
+    @Autowired
+    public DocumentRestController(DocumentController Ctrl) {
+        this.ctrlDocs = Ctrl;
+    }
+
+    @RequestMapping(value = "download", method = RequestMethod.GET)
+    @ResponseBody
+    public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
+
+        Resource file = null;
+
+        //Apelam functie care sa ne returneze numele fisierului,
+        //folosind variabila variable ca si parametru
+        //String filename = null;
+        //--------------------------------------------------------
+        try {
+            file = ctrlDocs.loadAsResource(filename);
+        }catch(FileNotFoundException e){
+
+        }
+
+        return ResponseEntity
+                .ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\""+file.getFilename()+"\"")
+                .body(file);
+
+    }
+
+    @RequestMapping(value = "upload", method = RequestMethod.POST)
+    public String handleFileUpload(@RequestParam("file") MultipartFile file,@RequestParam("var") String str,
+                                   RedirectAttributes redirectAttributes) {
+
+        //functia cere returneaza noul nume al fisierului
+        ctrlDocs.store(file, "noul nume al fisierului");
+        redirectAttributes.addFlashAttribute("message",
+                "You successfully uploaded " + file.getName() + "!");
+
+        return "redirect:/";
+    }
+
+
+
+
+
 }
 

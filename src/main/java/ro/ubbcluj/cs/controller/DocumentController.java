@@ -60,4 +60,53 @@ public class DocumentController {
     public String GetNameForDownload(String documentType, int documentStatus, User user) {
         return repoDocs.getNameForDownload(documentType, documentStatus, user.getUsername());
     }
+
+    private final Path rootLocation;
+
+    @Autowired
+    public DocumentController() {
+        this.rootLocation = Paths.get("./src/main/resources/DocumentVersions");
+        log.info("DocumentController");
+    }
+
+    @Autowired
+    private DocumentRepository repoDocs;
+
+    private static Logger log = LogManager.getLogger(DocumentController.class);
+
+    public void store(MultipartFile file, String name) {
+        try {
+            if (file.isEmpty()) {
+                log.error("Uploaded file is empty");
+            }
+            Files.copy(file.getInputStream(), this.rootLocation.resolve(name));
+        } catch (IOException e) {
+            log.error("Error at uploading file"+e.getMessage());
+        }
+    }
+
+    public Path load(String filename) {
+        return rootLocation.resolve(filename);
+    }
+
+    public Resource loadAsResource(String filename) throws FileNotFoundException{
+        try {
+            Path file = load(this.rootLocation+"/"+filename);
+            Resource resource = new UrlResource(file.toUri());
+            if(resource.exists() || resource.isReadable()) {
+                log.info("File successfully found");
+                return resource;
+            }
+            else {
+                log.error("Error at loading a document");
+                throw new FileNotFoundException();
+
+            }
+        } catch (MalformedURLException e) {
+            log.error("Error at loading loadAsResourse"+e.getMessage());
+            throw new FileNotFoundException();
+        }
+
+    }
+
 }
