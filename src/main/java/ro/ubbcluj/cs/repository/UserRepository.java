@@ -84,7 +84,7 @@ public class UserRepository {
             List<User> users = jdbcTemplate.query(
                     "SELECT users.id, username,permissions,lastname,firstname,cnp,phone,idGroup,groups.name as groupName FROM users " +
                     "INNER JOIN groups ON users.idGroup = groups.id "+
-                    "WHERE username = ? AND password = ?",
+                    "WHERE username = ? AND password = md5(?)",
                     new Object[]{username, password}, new UserRowMapper());
             return users.size() == 0 ? null : users.get(0);
         } catch (Exception e) {

@@ -129,4 +129,10 @@ public class DocumentController {
     public List<Document> GetAllTemplates() {
         return repoDocs.GetTemplates();
     }
+    
+    public List<Document> GetAllDocsToSign(User user)
+    {
+        
+        return null;
+    }
 }

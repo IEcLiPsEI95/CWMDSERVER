@@ -144,6 +144,23 @@ public class DocumentRestController {
             return CWMDRequestResponse.createResponse(e.getMessage(), e.getStatus());
         }
     }
+    
+    @RequestMapping(value = "getdocstosign", method = RequestMethod.GET)
+    public ResponseEntity<?> GetAllDocsToSign(
+            @RequestHeader(value = TOKEN_HEADER) String token
+    ) {
+        log.info("Trying to return all the templates");
+        
+        try {
+            User user = sm.GetLoggedInUser(token, UserPerm.PERM_MANAGER);
+            
+            List<Document> docs = ctrlDocs.GetAllDocsToSign(user);
+            return CWMDRequestResponse.createResponse(docs, HttpStatus.OK);
+        } catch (UserController.RequestException e) {
+            log.error(e.getMessage());
+            return CWMDRequestResponse.createResponse(e.getMessage(), e.getStatus());
+        }
+    }
 
 }
 

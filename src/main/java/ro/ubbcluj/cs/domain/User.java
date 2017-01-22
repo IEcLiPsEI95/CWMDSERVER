@@ -34,7 +34,8 @@ public class User
         loggedInTime        = 0;
     }
         
-    public User() {
+    public User() 
+    {
 
     }
     
