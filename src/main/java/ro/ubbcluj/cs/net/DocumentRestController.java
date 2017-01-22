@@ -87,16 +87,16 @@ public class DocumentRestController {
         log.info("Trying to download a file");
 
         try {
-            User user = sm.GetLoggedInUser(token, UserPerm.PERM_BASIC_USER);
-            String fileName;
+//            User user = sm.GetLoggedInUser(token, UserPerm.PERM_BASIC_USER);
+//            String fileName;
+//
+//            if (user.getPermissions() == UserPerm.PERM_MANAGER) {
+//                fileName = ctrlDocs.GetNameForDownload(docType, 3, user);
+//            } else {
+//                fileName = ctrlDocs.GetNameForDownload(docType, 1, user);
+//            }
 
-            if (user.getPermissions() == UserPerm.PERM_MANAGER) {
-                fileName = ctrlDocs.GetNameForDownload(docType, 3, user);
-            } else {
-                fileName = ctrlDocs.GetNameForDownload(docType, 1, user);
-            }
-
-            Resource file = ctrlDocs.LoadFileAsResource(fileName);
+            Resource file = ctrlDocs.LoadFileAsResource(param+"."+ext);
 
             return ResponseEntity
                     .ok()

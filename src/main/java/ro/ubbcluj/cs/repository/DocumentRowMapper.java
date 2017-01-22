@@ -17,7 +17,7 @@ public class DocumentRowMapper implements RowMapper<Document> {
     public Document mapRow(ResultSet resultSet, int i) throws SQLException {
         Document document = new Document();
         document.setId(resultSet.getInt("idDoc"));
-        document.setBaseName("path");
+        document.setBaseName(resultSet.getString("path"));
         document.setVersionDraftMinor(resultSet.getInt("versionDraftMinor"));
         document.setVersionFinRevMinor(resultSet.getInt("versiuneFinRevMinor"));
         document.setStatus(resultSet.getInt("idStatus"));

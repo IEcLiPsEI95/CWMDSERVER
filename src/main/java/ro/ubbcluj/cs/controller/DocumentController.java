@@ -61,7 +61,7 @@ public class DocumentController {
         newName = newName + document.getIdDocumentType() + "_";
 
         if (document.getStatus() == 1) {
-            newName = newName + "DRAFT_0." + document.getVersionDraftMinor();
+                newName = newName + "DRAFT_0." + document.getVersionDraftMinor();
         } else if (document.getStatus() == 2) {
             newName = newName + "FINAL_1.0";
         } else {
@@ -135,7 +135,6 @@ public class DocumentController {
     
     public List<Document> GetAllDocsToSign(User user)
     {
-        
-        return null;
+        return repoDocs.getAllDocsToSignForGroup(user.getGroupId());
     }
 }
