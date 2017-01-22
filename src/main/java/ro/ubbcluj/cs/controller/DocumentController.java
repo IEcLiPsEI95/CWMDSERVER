@@ -100,10 +100,12 @@ public class DocumentController {
     public Path LoadFile(String filename) {
         return rootLocation.resolve(filename);
     }
-
-    public Resource LoadFileAsResource(String filename) throws UserController.RequestException {
-        try {
-            Path file = LoadFile(this.rootLocation + "/" + filename);
+    
+    public Resource LoadFileAsResource(String filename) throws UserController.RequestException
+    {
+        try
+        {
+            Path file = LoadFile(filename);
             Resource resource = new UrlResource(file.toUri());
             if (resource.exists() || resource.isReadable()) {
                 log.info("File successfully found");

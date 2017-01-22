@@ -17,6 +17,7 @@ import org.apache.logging.log4j.Logger;
 
 import ro.ubbcluj.cs.session.SessionManager;
 
+import javax.websocket.server.PathParam;
 import java.io.FileNotFoundException;
 import java.util.List;
 
@@ -75,12 +76,14 @@ public class DocumentRestController {
         }
     }
 
-    @RequestMapping(value = "download", method = RequestMethod.GET)
+    @RequestMapping(value = "download/{param}.{ext}", method = RequestMethod.GET)
     public ResponseEntity<?> DownloadFile(
             @RequestHeader(value = TOKEN_HEADER) String token,
             @RequestParam("type") int docType,
-            @PathVariable String param // ceva variable de care o sa avem nevoie
-    ) {
+            @PathVariable String param, // ceva variable de care o sa avem nevoie
+            @PathVariable String ext
+    )
+    {
         log.info("Trying to download a file");
 
         try {
