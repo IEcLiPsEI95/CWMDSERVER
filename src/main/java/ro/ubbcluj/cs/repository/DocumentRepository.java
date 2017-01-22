@@ -6,10 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ro.ubbcluj.cs.domain.Document;
+import ro.ubbcluj.cs.domain.DocumentTemplate;
 import ro.ubbcluj.cs.domain.User;
 
 import java.sql.PreparedStatement;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -108,31 +108,197 @@ public class DocumentRepository {
     }
 
     public String getNameForDownload(int documentType, int documentStatus, String username) {
-        //TODO get the name of last document(specified by documentType and documentStatus) upload by user(specified by username)
+        int maxStatus = 0;
+        try {
+            readWriteLock.writeLock().lock();
+            List<Document> documents = jdbcTemplate.query(
+                    "select  docflows.groupOrder, " +
+                            "documents.id as idDoc, " +
+                            "documents.path, " +
+                            "documents.versionDraftMinor, " +
+                            "documents.versiuneFinRevMinor, " +
+                            "documents.idStatus, " +
+                            "documents.nextGroup " +
+                            "from documents " +
+                            "inner join doctype on doctype.id = documents.idType " +
+                            "inner join docflows on doctype.idFlow = docflows.id " +
+                            "inner join users on documents.idUser = users.id "+
+                            "where documents.idType = ? and users.username = ? and documents.idStatus = ?",
+                    new Object[]{documentType, username, documentStatus}, new DocumentRowMapper());
+            // 1 - draft; 2 - final; 3 - final_revizuit, 4 - blocked (gata)
+            for (Document document : documents){
+                if (maxStatus < document.getStatus())
+                    maxStatus = document.getStatus();
+            }
+            if (maxStatus == 4){
+                for (Document document : documents){
+                    if (maxStatus == document.getStatus()){
+                        return document.getBaseName();
+                    }
+                }
+            } else if (maxStatus == 3){
+                int maxRevFinVer = 0;
+                for (Document document : documents){
+                    if (maxStatus == document.getStatus() && maxRevFinVer < document.getVersionFinRevMinor()){
+                        maxRevFinVer = document.getVersionFinRevMinor();
+                    }
+                }
+                for (Document document : documents){
+                    if (maxStatus == document.getStatus() && maxRevFinVer == document.getVersionFinRevMinor()){
+                        return document.getBaseName();
+                    }
+                }
+            } else if (maxStatus == 1){
+                int maxDraftVer = 0;
+                for (Document document : documents){
+                    if (maxStatus == document.getStatus() && maxDraftVer < document.getVersionDraftMinor()){
+                        maxDraftVer = document.getVersionDraftMinor();
+                    }
+                }
+                for (Document document : documents){
+                    if (maxStatus == document.getStatus() && maxDraftVer == document.getVersionDraftMinor()){
+                        return document.getBaseName();
+                    }
+                }
+            } else {
+                for (Document document : documents){
+                    if (maxStatus == document.getStatus()){
+                        return document.getBaseName();
+                    }
+                }
+            }
 
-        return "CoolName";
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw e;
+        } finally {
+            readWriteLock.writeLock().unlock();
+        }
+        return null;
     }
 
     public Document getDocument(int docType, User user) {
-        //TODO return document if you know docType and user else return a new Document with versions 0.0 or smt like that :D
-        return new Document();
+        int maxStatus = 0;
+        try {
+            readWriteLock.writeLock().lock();
+            List<Document> documents = jdbcTemplate.query(
+                    "select  docflows.groupOrder, " +
+                            "documents.id as idDoc, " +
+                            "documents.path, " +
+                            "documents.versionDraftMinor, " +
+                            "documents.versiuneFinRevMinor, " +
+                            "documents.idStatus, " +
+                            "documents.nextGroup " +
+                    "from documents " +
+                    "inner join doctype on doctype.id = documents.idType " +
+                    "inner join docflows on doctype.idFlow = docflows.id " +
+                    "where documents.idType = ? and documents.idUser = ?", new Object[]{docType, user.getId()}, new DocumentRowMapper());
+            // 1 - draft; 2 - final; 3 - final_revizuit, 4 - blocked (gata)
+            for (Document document : documents){
+                if (maxStatus < document.getStatus())
+                    maxStatus = document.getStatus();
+            }
+            if (maxStatus == 4){
+                for (Document document : documents){
+                    if (maxStatus == document.getStatus()){
+                        return document;
+                    }
+                }
+            } else if (maxStatus == 3){
+                int maxRevFinVer = 0;
+                for (Document document : documents){
+                    if (maxStatus == document.getStatus() && maxRevFinVer < document.getVersionFinRevMinor()){
+                        maxRevFinVer = document.getVersionFinRevMinor();
+                    }
+                }
+                for (Document document : documents){
+                    if (maxStatus == document.getStatus() && maxRevFinVer == document.getVersionFinRevMinor()){
+                        return document;
+                    }
+                }
+            } else if (maxStatus == 1){
+                int maxDraftVer = 0;
+                for (Document document : documents){
+                    if (maxStatus == document.getStatus() && maxDraftVer < document.getVersionDraftMinor()){
+                        maxDraftVer = document.getVersionDraftMinor();
+                    }
+                }
+                for (Document document : documents){
+                    if (maxStatus == document.getStatus() && maxDraftVer == document.getVersionDraftMinor()){
+                        return document;
+                    }
+                }
+            } else {
+                for (Document document : documents){
+                    if (maxStatus == document.getStatus()){
+                        return document;
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw e;
+        } finally {
+            readWriteLock.writeLock().unlock();
+        }
+        return null;
     }
 
-    public List<Document> GetTemplates() {
-        //TODO return all templates
-        List<Document> docs = new ArrayList<>();
-        docs.add(new Document("Template1", 1));
-        docs.add(new Document("Template2", 2));
-        return docs;
+    public List<DocumentTemplate> GetTemplates() {
+        return jdbcTemplate.query(
+                "select docType.id, docType.name, docType.docTemplatePath, docFlows.groupOrder from docType " +
+                "inner join docFlows on docFlows.id = docType.idFlow", new Object[]{}, new DocumentTemplateRowMapper());
     }
 
     public boolean UserHasDocument(User user, int documentType) {
-        //TODO
-        return false;
+        return getDocument(documentType, user) != null;
     }
 
-    public String GetDocumentTemplate(int documentType) {
-        //TODO we need a db with templates
-        return null;
+    public DocumentTemplate GetDocumentTemplate(int documentType) throws InvalidDocumentTemplateId {
+        DocumentTemplate documentTemplate = null;
+        Boolean found = false;
+        List<DocumentTemplate> documentTemplates = GetTemplates();
+        for (DocumentTemplate template: documentTemplates) {
+            if (template.getId() == documentType){
+                found = true;
+                documentTemplate = template;
+                break;
+            }
+        }
+        if (found) {
+            return documentTemplate;
+        }
+        else {
+            throw new InvalidDocumentTemplateId();
+        }
+    }
+
+    public List<Document> getAllDocsToSignForGroup(int groupId)
+    {
+        try {
+            readWriteLock.writeLock().lock();
+            return jdbcTemplate.query(
+                    "select  docflows.groupOrder, " +
+                            "documents.id as idDoc, " +
+                            "documents.path, " +
+                            "documents.versionDraftMinor, " +
+                            "documents.versiuneFinRevMinor, " +
+                            "documents.idStatus, " +
+                            "documents.nextGroup " +
+                            "from documents " +
+                            "inner join doctype on doctype.id = documents.idType " +
+                            "inner join docflows on doctype.idFlow = docflows.id " +
+                            "where documents.nextGroup = ?",
+                    new Object[]{groupId}, new DocumentRowMapper());
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw e;
+        } finally {
+            readWriteLock.writeLock().unlock();
+        }
+    }
+
+    public class InvalidDocumentTemplateId extends Throwable {
     }
 }

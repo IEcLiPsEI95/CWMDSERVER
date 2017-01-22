@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 import ro.ubbcluj.cs.domain.Document;
+import ro.ubbcluj.cs.domain.DocumentTemplate;
 import ro.ubbcluj.cs.domain.User;
 import ro.ubbcluj.cs.repository.DocumentRepository;
 
@@ -76,8 +77,8 @@ public class DocumentController {
             if (repoDocs.UserHasDocument(user, documentType)) {
                 return repoDocs.getNameForDownload(documentType, documentStatus, user.getUsername());
             }
-            return repoDocs.GetDocumentTemplate(documentType);
-        } catch (Exception ex) {
+            return repoDocs.GetDocumentTemplate(documentType).getName();
+        } catch (Exception | DocumentRepository.InvalidDocumentTemplateId ex) {
             log.error(ex.getMessage());
             throw new UserController.RequestException(ex.getMessage(), HttpStatus.BAD_REQUEST);
         }
@@ -126,7 +127,7 @@ public class DocumentController {
         }
     }
 
-    public List<Document> GetAllTemplates() {
+    public List<DocumentTemplate> GetAllTemplates() {
         return repoDocs.GetTemplates();
     }
     

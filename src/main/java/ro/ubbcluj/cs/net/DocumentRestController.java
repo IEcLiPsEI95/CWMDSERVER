@@ -10,15 +10,12 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.core.io.Resource;
 import ro.ubbcluj.cs.controller.DocumentController;
 import ro.ubbcluj.cs.controller.UserController;
-import ro.ubbcluj.cs.domain.CWMDRequestResponse;
-import ro.ubbcluj.cs.domain.Document;
-import ro.ubbcluj.cs.domain.UserPerm;
+import ro.ubbcluj.cs.domain.*;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import ro.ubbcluj.cs.session.SessionManager;
-import ro.ubbcluj.cs.domain.User;
 
 import java.io.FileNotFoundException;
 import java.util.List;
@@ -137,7 +134,7 @@ public class DocumentRestController {
         try {
             User user = sm.GetLoggedInUser(token, UserPerm.PERM_BASIC_USER);
 
-            List<Document> docs = ctrlDocs.GetAllTemplates();
+            List<DocumentTemplate> docs = ctrlDocs.GetAllTemplates();
             return CWMDRequestResponse.createResponse(docs, HttpStatus.OK);
         } catch (UserController.RequestException e) {
             log.error(e.getMessage());
