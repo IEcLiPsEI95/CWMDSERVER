@@ -21,6 +21,12 @@ public class Document
     public Document() {
     }
 
+    public Document(String name, int type) {
+        this.baseName = name;
+        idDocumentType= type;
+
+    }
+
     public int getId() {
         return id;
     }

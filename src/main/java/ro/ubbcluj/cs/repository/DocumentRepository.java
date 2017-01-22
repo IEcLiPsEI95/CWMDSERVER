@@ -6,8 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ro.ubbcluj.cs.domain.Document;
+import ro.ubbcluj.cs.domain.User;
 
 import java.sql.PreparedStatement;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -105,9 +107,32 @@ public class DocumentRepository {
         }
     }
 
-    public String getNameForDownload(String documentType, int documentStatus, String username) {
+    public String getNameForDownload(int documentType, int documentStatus, String username) {
         //TODO get the name of last document(specified by documentType and documentStatus) upload by user(specified by username)
 
         return "CoolName";
+    }
+
+    public Document getDocument(int docType, User user) {
+        //TODO return document if you know docType and user else return a new Document with versions 0.0 or smt like that :D
+        return new Document();
+    }
+
+    public List<Document> GetTemplates() {
+        //TODO return all templates
+        List<Document> docs = new ArrayList<>();
+        docs.add(new Document("Template1", 1));
+        docs.add(new Document("Template2", 2));
+        return docs;
+    }
+
+    public boolean UserHasDocument(User user, int documentType) {
+        //TODO
+        return false;
+    }
+
+    public String GetDocumentTemplate(int documentType) {
+        //TODO we need a db with templates
+        return null;
     }
 }
