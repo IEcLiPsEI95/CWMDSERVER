@@ -19,8 +19,8 @@ public class UserPerm
 //    public static final long PERM_SIGN_DOCUMENT     = 0x00000040;
 
     public static final long PERM_ADMIN               = 0x00000001;
-    public static final long PERM_MANAGER             = 0x00000002;
-    public static final long PERM_BASIC_USER          = 0x00000004;
+    public static final long PERM_MANAGER             = 0x00000006; // download, sign, reject
+    public static final long PERM_BASIC_USER          = 0x00000004; // download, upload
 
     public static final long PERM_ALL               = -1; // asta-i dumnezo
 }

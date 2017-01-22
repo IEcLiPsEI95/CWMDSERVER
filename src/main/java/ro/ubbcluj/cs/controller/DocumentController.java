@@ -12,13 +12,9 @@ import ro.ubbcluj.cs.domain.Document;
 import ro.ubbcluj.cs.domain.User;
 import ro.ubbcluj.cs.repository.DocumentRepository;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -29,93 +25,136 @@ import java.nio.file.Paths;
  */
 
 @Component
-public class DocumentController {
+public class DocumentController
+{
     @Autowired
     private DocumentRepository repoDocs;
-
+    
     private static Logger log = LogManager.getLogger(DocumentController.class);
     private final Path rootLocation = Paths.get("./src/main/resources/DocumentVersions");
-    private DocumentController() {
+    
+    private DocumentController()
+    {
         log.info("DocumentController");
     }
-
-    public void Sign(int documentId, User user) throws UserController.RequestException {
-        if (repoDocs.NextToSign(documentId) == user.getGroupId()) {
+    
+    public void Sign(int documentId, User user) throws UserController.RequestException
+    {
+        if (repoDocs.NextToSign(documentId) == user.getGroupId())
+        {
             repoDocs.Sign(documentId);
-        } else {
+        } 
+        else
+        {
             throw new UserController.RequestException("You are not authorised.", HttpStatus.BAD_REQUEST);
         }
     }
-
-    public void Reject(int documentId, User user) throws UserController.RequestException {
-        if (repoDocs.NextToSign(documentId) == user.getGroupId()) {
+    
+    public void Reject(int documentId, User user) throws UserController.RequestException
+    {
+        if (repoDocs.NextToSign(documentId) == user.getGroupId())
+        {
             repoDocs.Reject(documentId);
-        } else {
+        } 
+        else
+        {
             throw new UserController.RequestException("You are not authorised.", HttpStatus.BAD_REQUEST);
         }
     }
-
-    public String GetNameForUpload(Document document, User user) {
+    
+    public String GetNameForUpload(Document document, User user)
+    {
         String newName = "";
         newName = newName + user.getFirstName() + "_" + user.getLastName() + "_";
         newName = newName + document.getBaseName() + "_";
-        if (document.getStatus() == 1) {
+        
+        if (document.getStatus() == 1)
+        {
             newName = newName + "DRAFT_0." + document.getVersionDraftMinor();
-        } else if (document.getStatus() == 2) {
+        } 
+        else if (document.getStatus() == 2)
+        {
             newName = newName + "FINAL_1.0";
-        }
-        else {
+        } 
+        else
+        {
             newName = newName + "FINAL_REVIZUIT_1." + document.getVersionFinRevMinor();
         }
         document.setBaseName(newName);
-
+        
         return newName;
     }
-
-    public String GetNameForDownload(String documentType, int documentStatus, User user) {
-        return repoDocs.getNameForDownload(documentType, documentStatus, user.getUsername());
+    
+    public String GetNameForDownload(String documentType, int documentStatus, User user) throws UserController.RequestException
+    {
+        try
+        {
+            return repoDocs.getNameForDownload(documentType, documentStatus, user.getUsername());
+        }
+        catch (Exception ex)
+        {
+            log.error(ex.getMessage());
+            throw new UserController.RequestException(ex.getMessage(), HttpStatus.BAD_REQUEST);
+        }
     }
-    public void store(MultipartFile file, String name) {
-        try {
-            if (file.isEmpty()) {
+    
+    public void StoreFile(MultipartFile file, String name) throws UserController.RequestException
+    {
+        try
+        {
+            if (file.isEmpty())
+            {
                 log.error("Uploaded file is empty");
+                throw new UserController.RequestException("Uploaded file is empty", HttpStatus.BAD_REQUEST);
             }
             Files.copy(file.getInputStream(), this.rootLocation.resolve(name));
-        } catch (IOException e) {
-            log.error("Error at uploading file"+e.getMessage());
+        }
+        catch (IOException e)
+        {
+            log.error("Error at uploading file: " + e.getMessage());
+            throw new UserController.RequestException(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
-
-    public Path load(String filename) {
+    
+    public Path LoadFile(String filename)
+    {
         return rootLocation.resolve(filename);
     }
-
-    public Resource loadAsResource(String filename) throws FileNotFoundException{
-        try {
-            Path file = load(this.rootLocation+"/"+filename);
+    
+    public Resource LoadFileAsResource(String filename) throws UserController.RequestException
+    {
+        try
+        {
+            Path file = LoadFile(this.rootLocation + "/" + filename);
             Resource resource = new UrlResource(file.toUri());
-            if(resource.exists() || resource.isReadable()) {
+            if (resource.exists() || resource.isReadable())
+            {
                 log.info("File successfully found");
                 return resource;
-            }
-            else {
+            } 
+            else
+            {
                 log.error("Error at loading a document");
-                throw new FileNotFoundException();
-
+                throw new UserController.RequestException("Failed to load file", HttpStatus.BAD_REQUEST);
             }
-        } catch (MalformedURLException e) {
-            log.error("Error at loading loadAsResourse"+e.getMessage());
-            throw new FileNotFoundException();
         }
-
+        catch (MalformedURLException e)
+        {
+            log.error("Error at loading loadAsResourse" + e.getMessage());
+            throw new UserController.RequestException("Failed to load file", HttpStatus.BAD_REQUEST);
+        }
     }
-
-    public void init() {
-        try {
+    
+    public void InitUploadDirectories() throws UserController.RequestException
+    {
+        try
+        {
             Files.createDirectory(rootLocation);
-        } catch (IOException e) {
+        }
+        catch (IOException e)
+        {
             log.error("Could not initialize storage", e);
+            throw new UserController.RequestException("pula", HttpStatus.BAD_REQUEST);
         }
     }
-
 }

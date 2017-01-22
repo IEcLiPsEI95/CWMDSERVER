@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -12,14 +11,11 @@ import org.springframework.core.io.Resource;
 import ro.ubbcluj.cs.controller.DocumentController;
 import ro.ubbcluj.cs.controller.UserController;
 import ro.ubbcluj.cs.domain.CWMDRequestResponse;
-import ro.ubbcluj.cs.domain.Document;
 import ro.ubbcluj.cs.domain.UserPerm;
-import ro.ubbcluj.cs.repository.DocumentRepository;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import org.apache.commons.logging.LogFactory;
 import ro.ubbcluj.cs.session.SessionManager;
 import ro.ubbcluj.cs.domain.User;
 
@@ -46,80 +42,98 @@ public class DocumentRestController
     
     // asta ii doar de test... sa vedem ca merge conexiunea
     @RequestMapping(value = "test/id={id}", method = RequestMethod.GET)
-    public @ResponseBody String Test(@PathVariable int id)
+    public String Test(@PathVariable int id)
     {
         log.info("s-o conectat: " + id);
         return Integer.toString(id * 2);
     }
     
     @RequestMapping(value = "sign", method = RequestMethod.POST)
-    public @ResponseBody ResponseEntity<?> Sign(@RequestHeader(value = TOKEN_HEADER, required = true) String token,
-                                                @RequestBody int documentId)
+    public ResponseEntity<?> Sign(
+            @RequestHeader(value = TOKEN_HEADER) String token,
+            @RequestBody int documentId
+    )
     {
-        try{
+        try
+        {
             User user = sm.GetLoggedInUser(token, UserPerm.PERM_MANAGER);
             ctrlDocs.Sign(documentId, user);
             return CWMDRequestResponse.createResponse("OK", HttpStatus.OK);
         }
-        catch (UserController.RequestException e) {
+        catch (UserController.RequestException e)
+        {
             log.error(e.getMessage());
             return CWMDRequestResponse.createResponse(e.getMessage(), e.getStatus());
         }
-        
     }
     
     @RequestMapping(value = "reject", method = RequestMethod.POST)
-    public @ResponseBody
-    ResponseEntity<?> Reject(@RequestHeader(value = TOKEN_HEADER, required = true) String token,
-                             @RequestBody int documentId)
+    public ResponseEntity<?> Reject(
+            @RequestHeader(value = TOKEN_HEADER) String token,
+            @RequestBody int documentId
+    )
     {
-        try{
+        try
+        {
             User user = sm.GetLoggedInUser(token, UserPerm.PERM_MANAGER);
             ctrlDocs.Reject(documentId, user);
             return CWMDRequestResponse.createResponse("OK", HttpStatus.OK);
         }
-        catch (UserController.RequestException e) {
+        catch (UserController.RequestException e)
+        {
             log.error(e.getMessage());
             return CWMDRequestResponse.createResponse(e.getMessage(), e.getStatus());
         }
-        
     }
-
+    
     @RequestMapping(value = "download", method = RequestMethod.GET)
-    @ResponseBody
-    public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
-
-        Resource file = null;
-
-        //Apelam functie care sa ne returneze numele fisierului,
-        //folosind variabila variable ca si parametru
-        //String filename = null;
-        //--------------------------------------------------------
-        try {
-            file = ctrlDocs.loadAsResource(filename);
-        }catch(FileNotFoundException e){
-
+    public ResponseEntity<?> DownloadFile(
+            @RequestHeader(value = TOKEN_HEADER) String token,
+            @PathVariable String param // ceva variable de care o sa avem nevoie
+    )
+    {
+        log.info("Trying to download a file");
+        
+        try
+        {
+            User user = sm.GetLoggedInUser(token, UserPerm.PERM_BASIC_USER);
+            String fileName = ctrlDocs.GetNameForDownload(null, 0, user);
+            Resource file = ctrlDocs.LoadFileAsResource(fileName);
+    
+            return ResponseEntity
+                    .ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"")
+                    .body(file);
         }
-
-        return ResponseEntity
-                .ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\""+file.getFilename()+"\"")
-                .body(file);
-
+        catch (UserController.RequestException e)
+        {
+            log.error(e.getMessage());
+            return CWMDRequestResponse.createResponse(e.getMessage(), e.getStatus());
+        }
     }
-
+    
     @RequestMapping(value = "upload", method = RequestMethod.POST)
-    public String handleFileUpload(@RequestParam("file") MultipartFile file,@RequestParam("var") String str,
-                                   RedirectAttributes redirectAttributes) {
-
-        //functia cere returneaza noul nume al fisierului
-        ctrlDocs.store(file, "noul nume al fisierului");
-        redirectAttributes.addFlashAttribute("message",
-                "You successfully uploaded " + file.getName() + "!");
-
-        return "redirect:/";
+    public ResponseEntity<?> UploadFile(
+            @RequestHeader(value = TOKEN_HEADER) String token,
+            @RequestParam("file") MultipartFile file, 
+            @RequestParam("var") String parms
+    )
+    {
+        log.info("Trying to upload a file");
+    
+        try
+        {
+            User user = sm.GetLoggedInUser(token, UserPerm.PERM_BASIC_USER);
+            String fileName = ctrlDocs.GetNameForUpload(null, user);
+            
+            ctrlDocs.StoreFile(file, fileName);
+            return CWMDRequestResponse.createResponse("OK", HttpStatus.OK);
+        }
+        catch (UserController.RequestException e)
+        {
+            log.error(e.getMessage());
+            return CWMDRequestResponse.createResponse(e.getMessage(), e.getStatus());
+        }
     }
-
-
 }
 
