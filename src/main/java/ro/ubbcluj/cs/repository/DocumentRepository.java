@@ -10,6 +10,7 @@ import ro.ubbcluj.cs.domain.DocumentTemplate;
 import ro.ubbcluj.cs.domain.User;
 
 import java.sql.PreparedStatement;
+import java.sql.Types;
 import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -291,6 +292,22 @@ public class DocumentRepository {
                             "inner join docflows on doctype.idFlow = docflows.id " +
                             "where documents.nextGroup = ?",
                     new Object[]{groupId}, new DocumentRowMapper());
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw e;
+        } finally {
+            readWriteLock.writeLock().unlock();
+        }
+    }
+
+    public void setDocsToSignForGroup(Document document, User user)
+    {
+        try {
+            readWriteLock.writeLock().lock();
+            jdbcTemplate.update(
+                    "insert INTO `documents`(`id`, `path`, `versionDraftMinor`, `versiuneFinRevMinor`, `idUser`, `idType`, `idStatus`, `nextGroup`) VALUES ( NULL , ?, ?, ?, ?, ?, ?, ?)",
+                    new Object[]{document.getBaseName(), document.getVersionDraftMinor(), document.getVersionFinRevMinor(), user.getId(),document.getIdDocumentType(),document.getStatus(),document.getWhosNext()},
+                    new int[] {Types.VARCHAR,Types.INTEGER,Types.INTEGER,Types.INTEGER,Types.INTEGER,Types.INTEGER,Types.INTEGER});
         } catch (Exception e) {
             log.error(e.getMessage());
             throw e;

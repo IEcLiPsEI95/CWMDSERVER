@@ -13,11 +13,15 @@ import ro.ubbcluj.cs.domain.DocumentTemplate;
 import ro.ubbcluj.cs.domain.User;
 import ro.ubbcluj.cs.repository.DocumentRepository;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 
 
@@ -53,23 +57,29 @@ public class DocumentController {
         }
     }
 
-    public String GetNameForUpload(int docType, User user) {
+    public Document GetNameForUpload(int docType, User user) {
         Document document = repoDocs.getDocument(docType, user);
 
+        if(document == null)
+        {
+            document = new Document("",docType);
+            document.setStatus(docType);
+            document.setWhosNext(docType);
+        }
         String newName = "";
         newName = newName + user.getFirstName() + "_" + user.getLastName() + "_";
         newName = newName + document.getIdDocumentType() + "_";
 
         if (document.getStatus() == 1) {
-                newName = newName + "DRAFT_0." + document.getVersionDraftMinor();
+                newName = newName + "DRAFT_0_" + document.getVersionDraftMinor()+".docx";
         } else if (document.getStatus() == 2) {
-            newName = newName + "FINAL_1.0";
+            newName = newName + "FINAL_1_0.docx";
         } else {
-            newName = newName + "FINAL_REVIZUIT_1." + document.getVersionFinRevMinor();
+            newName = newName + "FINAL_REVIZUIT_1_" + document.getVersionFinRevMinor()+".docx";
         }
         document.setBaseName(newName);
 
-        return newName;
+        return document;
     }
 
     public String GetNameForDownload(int documentType, int documentStatus, User user) throws UserController.RequestException {
@@ -84,13 +94,13 @@ public class DocumentController {
         }
     }
 
-    public void StoreFile(MultipartFile file, String name) throws UserController.RequestException {
+    public void StoreFile(String file, String name) throws UserController.RequestException {
         try {
-            if (file.isEmpty()) {
+            if (file.length()==0) {
                 log.error("Uploaded file is empty");
                 throw new UserController.RequestException("Uploaded file is empty", HttpStatus.BAD_REQUEST);
             }
-            Files.copy(file.getInputStream(), this.rootLocation.resolve(name));
+            Files.copy(this.rootLocation.resolve(file), this.rootLocation.resolve(name), StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             log.error("Error at uploading file: " + e.getMessage());
             throw new UserController.RequestException(e.getMessage(), HttpStatus.BAD_REQUEST);
@@ -132,7 +142,10 @@ public class DocumentController {
     public List<DocumentTemplate> GetAllTemplates() {
         return repoDocs.GetTemplates();
     }
-    
+    public void setDocsToSignForGroup(Document doc,User user)
+    {
+        repoDocs.setDocsToSignForGroup(doc,user);
+    }
     public List<Document> GetAllDocsToSign(User user)
     {
         return repoDocs.getAllDocsToSignForGroup(user.getGroupId());

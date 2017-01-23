@@ -18,8 +18,11 @@ import org.apache.logging.log4j.Logger;
 import ro.ubbcluj.cs.session.SessionManager;
 
 import javax.websocket.server.PathParam;
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.lang.reflect.Array;
 import java.util.List;
+import java.util.Base64;
 
 
 /**
@@ -111,16 +114,16 @@ public class DocumentRestController {
     @RequestMapping(value = "upload", method = RequestMethod.POST)
     public ResponseEntity<?> UploadFile(
             @RequestHeader(value = TOKEN_HEADER) String token,
-            @RequestParam("file") MultipartFile file,
             @RequestParam("type") int docType
     ) {
         log.info("Trying to upload a file");
 
         try {
             User user = sm.GetLoggedInUser(token, UserPerm.PERM_BASIC_USER);
-            String fileName = ctrlDocs.GetNameForUpload(docType, user);
+            Document file = ctrlDocs.GetNameForUpload(docType, user);
 
-            ctrlDocs.StoreFile(file, fileName);
+            ctrlDocs.StoreFile("Cerere_DR_2014-2015.docx", file.getBaseName());
+            ctrlDocs.setDocsToSignForGroup(file,user);
             return CWMDRequestResponse.createResponse("OK", HttpStatus.OK);
         } catch (UserController.RequestException e) {
             log.error(e.getMessage());
